@@ -1545,6 +1545,213 @@ function canSeePost(p){
 }
 function downloadData(data,name){if(!data)return toast("Aucun fichier disponible");const a=document.createElement("a");a.href=data;a.download=name||"tafab-media";document.body.appendChild(a);a.click();a.remove();}
 function openMediaViewer(p){const o=p.ownerType==="page"?findPage(p.ownerId):findUser(p.ownerId);modal(p.title||displayName(o),`<div class="media-viewer">${["video","reel"].includes(String(p.mediaType||""))?`<video src="${esc(p.media)}" controls autoplay playsinline></video>`:`<img src="${esc(p.media)}" alt="">`}<button class="btn primary wide" data-action="downloadMedia" data-id="${p.id}">⇩ Enregistrer</button></div>`);}
+
+/* =========================================================
+   TAFAß — RESTORED ROUTE RENDERER V1
+   Restores the SPA views that were lost while keeping
+   Supabase/Auth/Realtime/Admin logic untouched.
+========================================================= */
+function renderPost(p){
+  if(!p) return "";
+  const u=p.ownerType==="page" ? findPage(p.ownerId) : findUser(p.ownerId);
+  const owner=u||me();
+  const comments=(state.comments||[]).filter(c=>String(c.postId)===String(p.id));
+  const mine=String(p.ownerId)===String(state.current);
+  const reaction=p.myReaction?.[state.current]||"";
+  const media=p.media ? (
+    String(p.mediaType||"").startsWith("video") || p.mediaType==="reel"
+      ? `<div class="media-frame"><video src="${esc(p.media)}" controls playsinline preload="metadata"></video></div>`
+      : `<button class="post-media-button" data-action="viewMedia" data-id="${esc(p.id)}"><img src="${esc(p.media)}" alt="" loading="lazy"></button>`
+  ) : "";
+  return `<article class="card post-card" data-post="${esc(p.id)}" data-post-id="${esc(p.id)}">
+    <div class="post-head">
+      <button class="post-author" data-action="viewProfile" data-id="${esc(p.ownerId)}">${avatar(owner,"avatar md")}<span><b>${esc(displayName(owner))} ${verified(owner)}</b><small>${timeAgo(p.createdAt)} · ${esc(p.visibility||"Public")}</small></span></button>
+      <button class="icon-btn" data-action="postMore" data-id="${esc(p.id)}">⋯</button>
+    </div>
+    ${p.title&&p.title!=="Publication"?`<h3>${esc(p.title)}</h3>`:""}
+    <div class="post-text">${esc(p.text||"")}</div>
+    ${media}
+    <div class="post-stats"><span>${Object.values(p.reactions||{}).reduce((a,b)=>a+Number(b||0),0)} réactions</span><span>${comments.length} commentaires</span><span>${Number(p.shares||0)} partages</span></div>
+    <div class="post-actions">
+      <button class="${reaction?'active':''}" data-action="react" data-id="${esc(p.id)}">👍 ${reaction||"J’aime"}</button>
+      <button data-action="comment" data-id="${esc(p.id)}">💬 Commenter</button>
+      <button data-action="share" data-id="${esc(p.id)}">↗ Partager</button>
+      <button data-action="save" data-id="${esc(p.id)}">🔖 ${state.saved.includes(p.id)?"Enregistré":"Enregistrer"}</button>
+    </div>
+    <div class="comment-list">${comments.slice(-5).map(c=>{const cu=findUser(c.userId);return `<div class="comment-row">${avatar(cu,"avatar sm")}<div><b>${esc(displayName(cu))}</b><span>${esc(c.text||"")}</span><small>${timeAgo(c.createdAt)}</small></div></div>`}).join("")}</div>
+    <form class="comment-form" data-comment-form="${esc(p.id)}"><input placeholder="Écrire un commentaire…" maxlength="1000"><button class="btn primary" type="submit">Envoyer</button></form>
+  </article>`;
+}
+function renderHome(){
+  const filter=window.tafaHomeFeedFilter||"all";
+  let posts=(state.posts||[]).filter(canSeePost);
+  if(filter==="friends") posts=posts.filter(p=>p.ownerId===state.current||isFriend(p.ownerId));
+  if(filter==="media") posts=posts.filter(p=>p.media);
+  return `<section class="page-head"><div><span class="eyebrow">TAFAß</span><h1>Actualités</h1><p>Découvrez les publications de votre communauté.</p></div><button class="btn secondary" data-action="refreshFeed">↻ Actualiser</button></section>
+    <div class="feed-tabs"><button class="${filter==="all"?"active":""}" data-action="feedFilter" data-filter="all">Pour vous</button><button class="${filter==="friends"?"active":""}" data-action="feedFilter" data-filter="friends">Amis</button><button class="${filter==="media"?"active":""}" data-action="feedFilter" data-filter="media">Médias</button></div>
+    <div class="card composer-card"><div class="composer-trigger" data-action="openComposer" data-kind="post">${avatar(me(),"avatar md")}<span>Quoi de neuf, ${esc(me()?.firstName||"") || "vous"} ?</span><b>＋</b></div><div class="composer-shortcuts"><button data-action="openComposer" data-kind="photo">📷 Photo</button><button data-action="openComposer" data-kind="video">🎥 Vidéo</button><button data-action="openComposer" data-kind="reel">◆ Reel</button><button data-action="createStory">◉ Story</button></div></div>
+    <div class="stories-strip">${(state.stories||[]).slice(0,12).map(s=>{const su=findUser(s.ownerId);return `<button class="story-card" data-action="viewStory" data-id="${esc(s.id)}">${s.media?`<img src="${esc(s.media)}" alt="">`:"<span>＋</span>"}<b>${esc(displayName(su))}</b></button>`}).join("") || `<button class="story-card create" data-action="createStory"><span>＋</span><b>Créer une Story</b></button>`}</div>
+    <div class="feed-list">${posts.length?posts.map(renderPost).join(""):`<div class="card empty-state"><div class="empty-icon">⌁</div><h3>Aucune publication pour le moment</h3><p>Commencez par publier quelque chose ou ajoutez des amis.</p><button class="btn primary" data-action="openComposer" data-kind="post">Créer une publication</button></div>`}</div>`;
+}
+function renderFriends(){
+  const all=state.users.filter(u=>u.id!==state.current);
+  const friends=all.filter(u=>isFriend(u.id));
+  const requests=(state.friendRequests||[]).filter(r=>r.to===state.current&&r.status!=="accepted");
+  const list=friendTab==="requests"?requests.map(r=>findUser(r.from)).filter(Boolean):friendTab==="suggestions"?all.filter(u=>!isFriend(u.id)):friends;
+  return `<section class="page-head"><div><span class="eyebrow">COMMUNAUTÉ</span><h1>Amis</h1><p>Gérez vos amis, invitations et suggestions.</p></div><button class="btn primary" data-action="openFindFriends">Trouver des amis</button></section>
+  <div class="feed-tabs"><button class="${friendTab==="friends"?"active":""}" data-action="friendTab" data-tab="friends">Mes amis (${friends.length})</button><button class="${friendTab==="requests"?"active":""}" data-action="friendTab" data-tab="requests">Demandes (${requests.length})</button><button class="${friendTab==="suggestions"?"active":""}" data-action="friendTab" data-tab="suggestions">Suggestions</button></div>
+  <div class="card list-panel">${list.length?list.map(u=>`<div class="list-item friend-row">${avatar(u,"avatar md")}<div class="list-main"><b>${esc(displayName(u))} ${verified(u)}</b><small>@${esc(u.username||"")} · ${isOnline(u)?"En ligne":"Membre de Tafaß"}</small></div>${friendTab==="requests"?`<button class="btn primary" data-action="acceptFriend" data-id="${esc(u.id)}">Accepter</button><button class="btn ghost" data-action="declineFriend" data-id="${esc(u.id)}">Refuser</button>`:isFriend(u.id)?`<button class="btn ghost" data-action="messageUser" data-id="${esc(u.id)}">Message</button>`:`<button class="btn primary" data-action="addFriend" data-id="${esc(u.id)}">Ajouter</button>`}</div>`).join(""):`<div class="empty-state"><h3>Aucun résultat</h3><p>Les personnes et invitations apparaîtront ici.</p></div>`}</div>`;
+}
+function renderVideos(){
+  const posts=(state.posts||[]).filter(p=>canSeePost(p)&&String(p.mediaType||"").startsWith("video")&&p.mediaType!=="reel");
+  return `<section class="page-head"><div><span class="eyebrow">VIDÉOS</span><h1>Vidéos</h1><p>Regardez les vidéos publiées par la communauté.</p></div><button class="btn primary" data-action="openComposer" data-kind="video">＋ Publier une vidéo</button></section>
+  <div class="media-grid">${posts.length?posts.map(p=>`<div class="card media-tile" data-action="viewMedia" data-id="${esc(p.id)}">${p.media?`<video src="${esc(p.media)}" muted playsinline preload="metadata"></video>`:""}<div><b>${esc((p.text||"Vidéo").slice(0,70))}</b><small>${timeAgo(p.createdAt)}</small></div></div>`).join(""):`<div class="card empty-state"><h3>Aucune vidéo</h3><p>Les vidéos publiées apparaîtront ici.</p></div>`}</div>`;
+}
+function renderReels(){
+  const reels=(state.posts||[]).filter(p=>canSeePost(p)&&p.media&&(p.mediaType==="reel"||String(p.mediaType||"").toLowerCase().includes("reel")));
+  return `<section class="page-head"><div><span class="eyebrow">TAFAß REELS</span><h1>Réels</h1><p>Des vidéos courtes à découvrir.</p></div><button class="btn primary" data-action="openComposer" data-kind="reel">＋ Créer un Reel</button></section>
+  <div class="reels-grid">${reels.length?reels.map(p=>`<button class="reel-tile" data-action="viewMedia" data-id="${esc(p.id)}"><video src="${esc(p.media)}" muted playsinline preload="metadata"></video><span>${esc((p.text||"").slice(0,60))}</span></button>`).join(""):`<div class="card empty-state"><h3>Aucun Reel</h3><p>Publiez votre premier Reel.</p></div>`}</div>`;
+}
+function renderMarketplace(){
+  const q=(window.marketSearch||"").toLowerCase();
+  const items=(state.marketplace||[]).filter(x=>!q||`${x.title} ${x.description} ${x.location}`.toLowerCase().includes(q));
+  return `<section class="page-head"><div><span class="eyebrow">TAFAß MARKET</span><h1>Marketplace</h1><p>Achetez et vendez simplement dans votre communauté.</p></div><button class="btn primary" data-action="createMarketplace">＋ Vendre</button></section>
+  <div class="card search-inline"><input id="marketSearch" value="${esc(window.marketSearch||"")}" placeholder="Rechercher un produit, service…"><button class="btn secondary" id="marketSearchBtn">Rechercher</button></div>
+  <div class="market-grid">${items.length?items.map(x=>`<article class="card market-card">${x.image?`<button data-action="viewMarketMedia" data-id="${esc(x.id)}"><img src="${esc(x.image)}" alt=""></button>`:"<div class='market-placeholder'>🛍️</div>"}<div class="market-body"><span class="type-pill">${esc(x.kind||"Produit")}</span><h3>${esc(x.title)}</h3><strong>${esc(String(x.price||"Prix à discuter"))}</strong><small>📍 ${esc(x.location||"Madagascar")}</small><p>${esc((x.description||"").slice(0,120))}</p><div class="market-actions">${x.ownerId===state.current?`<button class="btn ghost danger" data-action="deleteMarket" data-id="${esc(x.id)}">Supprimer</button>`:`<button class="btn primary" data-action="messageUser" data-id="${esc(x.ownerId)}">Contacter</button><button class="btn ghost" data-action="reportMarket" data-id="${esc(x.id)}">Signaler</button>`}</div></div></article>`).join(""):`<div class="card empty-state"><h3>Aucune annonce</h3><p>La Marketplace est prête à accueillir vos annonces.</p></div>`}</div>`;
+}
+function renderNotifications(){
+  const ns=(state.notifications||[]).filter(n=>n.userId===state.current);
+  return `<section class="page-head"><div><span class="eyebrow">ACTIVITÉ</span><h1>Notifications</h1><p>Retrouvez toutes vos interactions récentes.</p></div><div class="head-actions"><button class="btn secondary" data-action="markAllRead">Tout lire</button><button class="btn ghost" data-action="clearNotifications">Effacer</button></div></section>
+  <div class="card notification-list">${ns.length?ns.map(n=>{const a=findUser(n.actorId);return `<button class="notification-row ${n.read?"":"unread"}" data-action="readNotif" data-id="${esc(n.id)}">${avatar(a,"avatar md")}<span><b>${esc(n.text||"Nouvelle activité")}</b><small>${timeAgo(n.createdAt)}</small></span>${n.read?"":"<i></i>"}</button>`}).join(""):`<div class="empty-state"><div class="empty-icon">♢</div><h3>Aucune notification</h3><p>Vous êtes à jour.</p></div>`}</div>`;
+}
+function renderSearch(){
+  const q=(window.globalSearchQuery||committedSearchQuery||"").trim().toLowerCase();
+  const people=(state.users||[]).filter(u=>u.id!==state.current&&(!q||`${displayName(u)} ${u.username||""} ${u.email||""}`.toLowerCase().includes(q)));
+  const posts=(state.posts||[]).filter(p=>canSeePost(p)&&(!q||`${p.text||""} ${p.title||""}`.toLowerCase().includes(q)));
+  return `<section class="page-head"><div><span class="eyebrow">RECHERCHE</span><h1>Rechercher</h1><p>Personnes, publications, vidéos, Pages et groupes.</p></div></section>
+  <div class="card search-hero"><input id="searchPageInput" value="${esc(q)}" placeholder="Rechercher sur Tafaß…"><button class="btn primary" id="searchPageBtn">Rechercher</button></div>
+  ${q?`<div class="search-sections"><section><h2>Personnes</h2><div class="card list-panel">${people.slice(0,20).map(u=>`<div class="list-item">${avatar(u,"avatar md")}<div class="list-main"><b>${esc(displayName(u))}</b><small>@${esc(u.username||"")}</small></div><button class="btn ghost" data-action="viewProfile" data-id="${esc(u.id)}">Voir</button></div>`).join("")||"<div class='empty'>Aucune personne.</div>"}</div></section><section><h2>Publications</h2><div class="feed-list">${posts.slice(0,20).map(renderPost).join("")||"<div class='card empty'>Aucune publication.</div>"}</div></section></div>`:`<div class="card empty-state"><div class="empty-icon">⌕</div><h3>Commencez votre recherche</h3><p>Trouvez des personnes et du contenu sur Tafaß.</p></div>`}`;
+}
+function renderMessages(){
+  const convMap=new Map();
+  (state.messages||[]).forEach(m=>{const other=m.from===state.current?m.to:m.from;if(!other)return;if(!convMap.has(other))convMap.set(other,m);});
+  const selected=activeConversation?state.messages.filter(m=>m.from===activeConversation||m.to===activeConversation):[];
+  const other=activeConversation?findUser(activeConversation):null;
+  return `<section class="page-head"><div><span class="eyebrow">MESSAGERIE</span><h1>Messages</h1><p>Discutez en privé avec vos contacts.</p></div><button class="btn primary" data-action="newConversation">＋ Nouveau message</button></section>
+  <div class="messages-layout card"><aside class="conversation-list"><input id="conversationSearch" placeholder="Rechercher une conversation…">${[...convMap.entries()].map(([id,m])=>{const u=findUser(id);return `<button class="conversation-item ${activeConversation===id?"active":""}" data-action="selectConversation" data-id="${esc(id)}">${avatar(u,"avatar md")}<span><b>${esc(displayName(u))}</b><small>${esc(m.text||"Fichier")}</small></span></button>`}).join("")||`<div class="empty">Aucune conversation.</div>`}</aside>
+  <section class="chat-panel">${activeConversation&&other?`<header class="chat-head">${avatar(other,"avatar md")}<div><b>${esc(displayName(other))}</b><small>@${esc(other.username||"")}</small></div><button class="icon-btn" data-action="backToMessages">×</button></header><div class="chat-messages">${selected.map(m=>`<div class="message-bubble ${m.from===state.current?"mine":""}"><span>${esc(m.text||"")}</span><small>${timeAgo(m.createdAt)}</small></div>`).join("")||`<div class="empty">Commencez la conversation.</div>`}</div><form class="chat-form" data-chat-form="${esc(activeConversation)}"><input name="text" placeholder="Écrire un message…" autocomplete="off"><button class="btn primary">Envoyer</button></form>`:`<div class="empty-state"><div class="empty-icon">✉</div><h3>Sélectionnez une conversation</h3><p>Choisissez un contact ou créez une nouvelle conversation.</p></div>`}</section></div>`;
+}
+function renderProfile(){
+  const target=profileViewingId||state.current, u=findUser(target)||me(), own=target===state.current;
+  const posts=(state.posts||[]).filter(p=>p.ownerId===target&&canSeePost(p));
+  const friends=(state.users||[]).filter(x=>x.id!==target&&isFriend(x.id));
+  return `<section class="profile-page"><div class="profile-cover"></div><div class="profile-card card"><div class="profile-main">${avatar(u,"avatar profile-avatar")}<div><h1>${esc(displayName(u))} ${verified(u)}</h1><p>@${esc(u.username||"")} · ${esc(u.country||"Madagascar")}</p><p>${esc(u.bio||"Bienvenue sur mon profil Tafaß.")}</p></div><div class="profile-actions">${own?`<button class="btn secondary" data-action="editProfile">Modifier le profil</button>`:`<button class="btn primary" data-action="${isFriend(u.id)?"messageUser":"addFriend"}" data-id="${esc(u.id)}">${isFriend(u.id)?"Message":"Ajouter"}</button><button class="btn ghost" data-action="follow" data-id="${esc(u.id)}">Suivre</button>`}</div></div><div class="profile-stats"><button data-action="profileStat" data-stat="friends"><b>${friends.length}</b><span>Amis</span></button><button data-action="profileStat" data-stat="followers"><b>${(state.follows||[]).filter(f=>f.to===target).length}</b><span>Abonnés</span></button><button><b>${posts.length}</b><span>Publications</span></button></div></div>
+  <div class="feed-tabs"><button class="active">Publications</button><button data-action="profileFriendsAll">Amis</button></div><div class="feed-list">${posts.length?posts.map(renderPost).join(""):`<div class="card empty-state"><h3>Aucune publication</h3><p>Les publications de ce profil apparaîtront ici.</p></div>`}</div></section>`;
+}
+function renderPages(){
+  const pages=state.pages||[];
+  return `<section class="page-head"><div><span class="eyebrow">COMMUNAUTÉS</span><h1>Pages</h1><p>Découvrez les Pages et gérez les vôtres.</p></div><button class="btn primary" data-action="createPage">＋ Créer une Page</button></section><div class="card list-panel">${pages.length?pages.map(p=>`<div class="list-item"><div class="avatar md">📄</div><div class="list-main"><b>${esc(p.name||"Page")}</b><small>@${esc(p.username||"")} · ${esc(p.category||"")}</small></div><button class="btn ghost" data-action="viewPage" data-id="${esc(p.id)}">Voir</button></div>`).join(""):`<div class="empty-state"><h3>Aucune Page</h3><p>Créez votre première Page.</p></div>`}</div>`;
+}
+function renderGroups(){
+  const groups=state.groups||[];
+  return `<section class="page-head"><div><span class="eyebrow">COMMUNAUTÉS</span><h1>Groupes</h1><p>Rejoignez des communautés et partagez avec leurs membres.</p></div><button class="btn primary" data-action="createGroup">＋ Créer un Groupe</button></section><div class="card list-panel">${groups.length?groups.map(g=>`<div class="list-item"><div class="avatar md">👥</div><div class="list-main"><b>${esc(g.name||"Groupe")}</b><small>${esc(g.privacy||"Public")} · ${Number(g.member_count||g.members?.length||0)} membres</small></div><button class="btn ghost" data-action="viewGroup" data-id="${esc(g.id)}">Voir</button></div>`).join(""):`<div class="empty-state"><h3>Aucun Groupe</h3><p>Créez ou rejoignez votre première communauté.</p></div>`}</div>`;
+}
+function renderMenu(){
+  const items=MENU_ITEMS.filter(x=>x[0]!=="profile");
+  return `<section class="page-head"><div><span class="eyebrow">TAFAß</span><h1>Menu</h1><p>Tous les espaces et paramètres de votre compte.</p></div></section><div class="menu-grid">${items.map(([id,icon,label])=>`<button class="menu-card-premium" data-route="${esc(id)}"><span>${icon}</span><strong>${esc(label)}</strong><small>Ouvrir ${esc(label.toLowerCase())}</small><i>›</i></button>`).join("")}</div><div class="card menu-account">${avatar(me(),"avatar lg")}<div><b>${esc(displayName(me()))}</b><small>@${esc(me()?.username||"")}</small></div><button class="btn ghost danger" data-action="logout">Déconnexion</button></div>`;
+}
+function renderSettingsRoute(){
+  const titles={settings:["Paramètres","Gérez les préférences de Tafaß."],privacy:["Confidentialité","Contrôlez qui peut voir vos informations."],security:["Sécurité","Protégez votre compte."],accounts:["Comptes","Gérez les comptes enregistrés sur cet appareil."],language:["Langue","Choisissez la langue de l’interface."],accessibility:["Accessibilité","Adaptez l’expérience à vos besoins."],devices:["Appareils","Consultez vos sessions."],payments:["Paiements","Historique des paiements et services."],badge:["Badge bleu","Demande de vérification."],ads:["Publicités","Préférences publicitaires."],activity:["Activité","Votre historique Tafaß."],help:["Aide","Trouvez les réponses aux questions fréquentes."],terms:["Conditions","Conditions d’utilisation de Tafaß."],about:["À propos de Tafaß","Réseau social moderne pour partager, communiquer et découvrir."]};
+  const [title,desc]=titles[route]||titles.settings;
+  if(route==="help") return `<section class="page-head"><div><span class="eyebrow">ASSISTANCE</span><h1>Aide</h1><p>${esc(desc)}</p></div></section><div class="menu-grid">${["Compte et connexion","Publications et Stories","Amis et abonnés","Messages et appels","Pages et groupes","Badge bleu","Confidentialité","Sécurité","Marketplace","Recherche"].map(x=>`<button class="menu-card-premium" data-action="helpTopic" data-topic="${esc(x)}"><span>?</span><strong>${esc(x)}</strong><i>›</i></button>`).join("")}</div>`;
+  if(route==="badge") return `<section class="page-head"><div><span class="eyebrow">VÉRIFICATION</span><h1>Badge bleu</h1><p>Demandez la vérification de votre compte.</p></div></section><div class="card empty-state"><div class="empty-icon">✓</div><h3>Badge bleu Tafaß</h3><p>Complétez votre demande de vérification en suivant les étapes proposées.</p><button class="btn primary" data-action="startBadge">Commencer la demande</button></div>`;
+  return `<section class="page-head"><div><span class="eyebrow">PARAMÈTRES</span><h1>${esc(title)}</h1><p>${esc(desc)}</p></div></section><div class="card settings-list">${MENU_ITEMS.filter(x=>["settings","privacy","security","accounts","language","accessibility","devices","payments","ads","activity","help"].includes(x[0])).map(([id,icon,label])=>`<button class="setting-row" data-route="${id}"><span>${icon}</span><div><b>${esc(label)}</b><small>Ouvrir cette rubrique</small></div><i>›</i></button>`).join("")}<button class="setting-row" data-action="changePassword"><span>🔑</span><div><b>Changer le mot de passe</b><small>Mettre à jour votre sécurité</small></div><i>›</i></button><button class="setting-row danger" data-action="logout"><span>↪</span><div><b>Déconnexion</b><small>Quitter la session actuelle</small></div><i>›</i></button></div>`;
+}
+function renderRoute(){
+  switch(route){
+    case "home": return renderHome();
+    case "friends": return renderFriends();
+    case "videos": return renderVideos();
+    case "reels": return renderReels();
+    case "marketplace": return renderMarketplace();
+    case "notifications": return renderNotifications();
+    case "search": return renderSearch();
+    case "messages": return renderMessages();
+    case "profile": return renderProfile();
+    case "pages": return renderPages();
+    case "groups": return renderGroups();
+    case "menu": return renderMenu();
+    case "saved": {const ps=(state.posts||[]).filter(p=>state.saved.includes(p.id));return `<section class="page-head"><div><span class="eyebrow">VOS CONTENUS</span><h1>Enregistrés</h1><p>Publications que vous avez sauvegardées.</p></div></section><div class="feed-list">${ps.map(renderPost).join("")||`<div class="card empty-state"><h3>Aucun contenu enregistré</h3></div>`}</div>`;}
+    case "events": return `<section class="page-head"><div><span class="eyebrow">COMMUNAUTÉ</span><h1>Événements</h1><p>Découvrez les événements à venir.</p></div><button class="btn primary" data-action="createEvent">＋ Créer un événement</button></section><div class="card empty-state"><h3>Aucun événement affiché</h3><p>Les événements créés apparaîtront ici.</p></div>`;
+    case "admin": return renderAdmin();
+    case "admin-users": return renderAdminUsers();
+    case "admin-reports": return renderAdminReports();
+    case "admin-badges": return renderAdminBadges();
+    case "admin-posts": return renderAdminPosts();
+    case "admin-pages": return renderAdminPages();
+    case "admin-groups": return renderAdminGroups();
+    case "admin-comments": return renderAdminComments();
+    case "admin-messages": return renderAdminMessages();
+    case "admin-settings": return renderAdminSettings();
+    case "pageView": {const p=findPage(editingPageId);return p?`<section class="page-head"><button class="btn secondary" data-action="goBack" data-back-target="pages">‹ Retour</button><div><span class="eyebrow">PAGE</span><h1>${esc(p.name||"Page")}</h1><p>${esc(p.description||"")}</p></div></section><div class="card empty-state"><h3>Bienvenue sur cette Page</h3><p>Les publications et informations de la Page apparaîtront ici.</p></div>`:`<div class="card empty-state"><h3>Page introuvable</h3></div>`;}
+    default: return renderSettingsRoute();
+  }
+}
+function openComposer(kind="post"){
+  const labels={post:"Créer une publication",photo:"Publier une photo",video:"Publier une vidéo",reel:"Créer un Reel"};
+  modal(labels[kind]||labels.post,`<form id="composerForm" class="premium-form"><label>Votre publication<textarea id="composerText" rows="5" maxlength="5000" placeholder="Exprimez-vous…"></textarea></label><label>Visibilité<select id="composerVisibility"><option>Public</option><option>Amis</option><option>Moi uniquement</option></select></label><input id="composerFile" type="file" accept="${kind==="photo"?"image/*":kind==="video"?"video/*":kind==="reel"?"video/*":"image/*,video/*"}"><small>Photo : 15 Mo max · Vidéo/Reel : 100 Mo max</small><button class="btn primary wide" type="submit">Publier</button></form>`);
+  $("composerForm").onsubmit=async e=>{e.preventDefault();const text=$("composerText").value.trim(),file=$("composerFile").files[0]||null;try{if(!text&&!file)throw new Error("Ajoutez du texte ou un média.");await createSupabasePost({text,file,visibility:$("composerVisibility").value,kind});await loadSupabasePosts();closeModal();render();toast("Publication publiée ✓");}catch(err){console.error(err);toast(err.message||"Publication impossible.");}};
+}
+
+
+/* RESTORED CORE HELPERS */
+function isFriend(id){
+  if(!state.current||!id) return false;
+  return (state.friendships||[]).some(f=>(String(f.a)===String(state.current)&&String(f.b)===String(id))||(String(f.b)===String(state.current)&&String(f.a)===String(id)));
+}
+function applyTheme(){
+  const dark=!!state.settings?.dark;
+  document.documentElement.classList.toggle("dark",dark);
+  document.body.classList.toggle("dark",dark);
+}
+function setupGlobal(){
+  const g=$("globalSearch");
+  if(g){
+    g.value=window.globalSearchQuery||"";
+    g.addEventListener("input",()=>{window.globalSearchQuery=g.value;});
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"){committedSearchQuery=g.value.trim();routeTo("search");}});
+  }
+  document.addEventListener("click",e=>{
+    const ms=e.target.closest("#marketSearchBtn");
+    if(ms){window.marketSearch=$("marketSearch")?.value||"";render();return;}
+    const ps=e.target.closest("#searchPageBtn");
+    if(ps){window.globalSearchQuery=$("searchPageInput")?.value||"";committedSearchQuery=window.globalSearchQuery;const top=$("globalSearch");if(top)top.value=window.globalSearchQuery;render();return;}
+  });
+}
+function openDeepLink(){
+  const path=location.hash.replace(/^#/,"").replace(/^\/+/,"");
+  if(path&&state.current){
+    const known=["home","friends","messages","search","profile","notifications","pages","groups","videos","marketplace","reels","menu","settings","privacy","security","accounts","language","accessibility","devices","payments","badge","ads","activity","help","terms","about","admin"];
+    if(known.includes(path)) route=path;
+  }
+}
+function searchSupabaseGlobal(q){ window.globalSearchQuery=q||""; committedSearchQuery=q||""; routeTo("search"); }
+function renderGroup(g){
+  if(!g) return `<div class="card empty-state"><h3>Groupe introuvable</h3></div>`;
+  return `<section class="page-head"><div><span class="eyebrow">GROUPE</span><h1>${esc(g.name||"Groupe")}</h1><p>${esc(g.description||"Communauté Tafaß")}</p></div><button class="btn secondary" data-action="goBack" data-back-target="groups">‹ Retour</button></section><div class="card empty-state"><h3>Bienvenue dans ${esc(g.name||"ce groupe")}</h3><p>${Number(g.members?.length||g.member_count||0)} membres</p></div>`;
+}
+function openAccountSwitcher(){
+  const accounts=savedAccounts();
+  modal("Comptes",`<div class="premium-options">${accounts.map(a=>`<button class="menu-card-premium" data-action="selectAccount" data-id="${esc(a.email)}"><span>◎</span><strong>${esc(a.name||a.email)}</strong><small>${esc(a.email)}</small></button>`).join("")}<button class="menu-card-premium" data-action="addAccount"><span>＋</span><strong>Ajouter un compte</strong></button></div>`);
+}
+async function switchSupabaseAccount(email){
+  closeModal();
+  if(!email)return;
+  if(supabaseReady()) await SB.auth.signOut();
+  state.current=null;save();$("authScreen")?.classList.remove("hidden");$("appScreen")?.classList.add("hidden");
+  const input=$("loginIdentifier");if(input){input.value=email;input.focus();}
+}
+
 function render(){
   const splash=$("splash"),auth=$("authScreen"),app=$("appScreen");
   if(!state.current){auth.classList.remove("hidden");app.classList.add("hidden");return;}
