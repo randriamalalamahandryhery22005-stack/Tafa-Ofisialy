@@ -4072,3 +4072,142 @@ body.dark .top-actions .menu-action{
 .admin-setting-row:last-child{border-bottom:0}.admin-setting-row b,.admin-setting-row small{display:block}.admin-setting-row small{margin-top:4px;color:var(--muted,#8d96a8)}
 @media(max-width:900px){.admin-stat-grid-v2{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-hero-v2{align-items:flex-start;flex-direction:column}.admin-grid-v2{grid-template-columns:1fr}}
 @media(max-width:560px){.admin-dashboard-v2{padding:10px 10px 30px}.admin-stat-grid-v2{grid-template-columns:1fr 1fr;gap:9px}.admin-stat{padding:13px}.admin-stat-icon{font-size:20px}.admin-stat-button strong{font-size:22px}.admin-stat-button small{font-size:11px}.admin-stat-button em{font-size:10px}.admin-actions-v2{grid-template-columns:1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.admin-message-safe{align-items:flex-start}.admin-message-safe strong{margin-left:auto}}
+
+/* ==========================================================
+   TAFAß — GLOBAL PREMIUM UI FIX V1
+   Fixes low-contrast white cards / unreadable text across all pages.
+   UI ONLY — no Supabase / SQL / Realtime changes.
+========================================================== */
+:root{
+  --tfa-bg:#070b12!important;
+  --tfa-card:#101722!important;
+  --tfa-card-2:#141d29!important;
+  --tfa-text:#f7f9ff!important;
+  --tfa-muted:#aab5c7!important;
+  --tfa-border:rgba(255,255,255,.10)!important;
+  --tfa-shadow:0 16px 42px rgba(0,0,0,.28)!important;
+  --tfa-soft:linear-gradient(135deg,rgba(36,124,255,.13),rgba(109,69,246,.10))!important;
+  --page-bg:#070b12!important;
+  --card-bg:#101722!important;
+}
+html,body,body:not(.dark){
+  background:
+    radial-gradient(circle at 8% 0%,rgba(36,124,255,.10),transparent 28%),
+    radial-gradient(circle at 92% 8%,rgba(109,69,246,.09),transparent 26%),
+    #070b12!important;
+  color:#f7f9ff!important;
+}
+body:not(.dark) .topbar,
+body:not(.dark) .sidebar,
+body:not(.dark) .bottom-nav,
+body:not(.dark) .app-shell{background:#0a0f17!important;color:#f7f9ff!important}
+
+/* Global surfaces */
+.card,.post,.composer,.settings-card,.admin-card,.menu-card-premium,.friend-card,
+.profile-side-card,.chat-shell,.page-hero,.notifications-premium>.card,
+.messages-premium>.card,.modal-card,.modal-content,.dropdown-menu,.context-menu,
+.story-strip,.feed-card,.search-history-v90,.search-result-card,.search-empty-v90,
+.news-composer-v90,.post-premium,.hub-card-v90,.settings-group-v90,.device-card-v90,
+.payment-panel-v90,.about-grid-v90 article,.about-description-v90,.legal-card-v90,
+.help-card-v90,.page-identity-v90,.page-tabs-v90,.page-about-grid-v90 article,
+.event-card-v90,.badge-info-premium,.badge-payment-premium,.badge-request-premium,
+.privacy-grid>div,.profile-stats-premium button{
+  background:linear-gradient(145deg,#121a26,#0d141e)!important;
+  color:#f7f9ff!important;
+  border-color:rgba(255,255,255,.10)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.22)!important;
+}
+
+/* Text hierarchy: never use near-white text on white surfaces */
+.card *, .post *, .composer *, .settings-card *, .admin-card *, .menu-card-premium *,
+.friend-card *, .profile-side-card *, .hub-card-v90 *, .settings-group-v90 *,
+.about-grid-v90 article *, .help-card-v90 *, .page-identity-v90 *,
+.page-about-grid-v90 article *, .event-card-v90 *, .badge-info-premium *,
+.badge-payment-premium *, .badge-request-premium *{color:inherit}
+.muted,.field-help,.card small,.card p,.post small,.post p,.admin-card small,.admin-card p,
+.menu-card-premium small,.friend-card small,.settings-card small,.settings-group-v90 small,
+.hub-card-v90 p,.about-grid-v90 article small,.about-description-v90 p,
+.help-card-v90 small,.page-title-v90>strong,.page-title-v90 p,.page-about-grid-v90 article strong,
+.badge-request-premium small{color:#aab5c7!important}
+
+/* Inputs / selects / textareas */
+input,select,textarea,
+.search-box-v90,.search-filter-v90,.hub-search-v90,.hub-filter-v90,
+.saved-filter-v90 button,.event-filter-v90 button,.help-search-v90{
+  background:#0d151f!important;
+  color:#f7f9ff!important;
+  border-color:rgba(255,255,255,.12)!important;
+}
+input::placeholder,textarea::placeholder{color:#7f8da2!important}
+option{background:#0d151f;color:#f7f9ff}
+
+/* V90 pages that previously forced white */
+.news-composer-input-v90{background:#182230!important;color:#cbd5e1!important}
+.search-result-card,.search-empty-v90,.search-history-v90,.search-box-v90,
+.search-filter-v90,.hub-search-v90,.hub-filter-v90,.hub-card-v90,
+.event-card-v90,.settings-group-v90,.device-card-v90,.payment-panel-v90,
+.about-grid-v90 article,.about-description-v90,.legal-card-v90,
+.help-search-v90,.help-card-v90,.page-nav-v90 button,.page-tabs-v90,
+.page-identity-v90,.page-about-grid-v90 article{background:linear-gradient(145deg,#121a26,#0d141e)!important}
+.hub-card-icon,.about-grid-v90 article>span,.help-card-v90>span,.page-about-grid-v90 article>span{
+  background:linear-gradient(145deg,rgba(36,124,255,.24),rgba(109,69,246,.18))!important;
+  color:#6ea8ff!important;
+}
+.page-cover-v90{background:#151f2d center/cover!important}
+.page-avatar-v90{background:#172333!important;border-color:#101722!important}
+.page-title-v90>strong,.page-title-v90 p{color:#aab5c7!important}
+
+/* Admin: high contrast, premium dark cards */
+.admin-dashboard-v2,.admin-subpage{color:#f7f9ff!important}
+.admin-stat-button,.admin-stat,.admin-grid-v2>.card,.admin-grid-v2>.admin-card,
+.admin-actions-v2>.card,.admin-actions-v2>.admin-card,
+.admin-toolbar,.admin-table-wrap,.admin-list-card{
+  background:linear-gradient(145deg,#121a26,#0d141e)!important;
+  color:#f7f9ff!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:20px!important;
+}
+.admin-stat-button strong,.admin-stat-button b,.admin-stat strong,.admin-stat b{color:#fff!important}
+.admin-stat-button small,.admin-stat-button em,.admin-arrow{color:#aab5c7!important}
+.admin-message-safe{background:rgba(36,124,255,.10)!important;color:#f7f9ff!important}
+.admin-setting-row{border-bottom-color:rgba(255,255,255,.10)!important}
+.admin-setting-row small{color:#aab5c7!important}
+
+/* Main navigation and branding */
+.topbar{background:rgba(8,12,18,.94)!important;border-bottom:1px solid rgba(255,255,255,.08)!important;backdrop-filter:blur(18px)}
+.brand-inline,.topbar-brand,.brand-wordmark{color:#f7f9ff!important}
+.brand-logo img,.splash-logo-circle img,.auth-brand .brand-logo img{width:100%;height:100%;object-fit:contain}
+.brand-logo{width:42px!important;height:42px!important;border-radius:13px!important;background:linear-gradient(145deg,#141e2d,#0b1119)!important;border:1px solid rgba(255,255,255,.12)!important}
+
+/* Buttons */
+.btn.secondary,.btn.ghost,.icon-btn,.search-clear-v90,.page-nav-v90 button{
+  background:#121a26!important;color:#f7f9ff!important;border-color:rgba(255,255,255,.12)!important
+}
+.btn.primary,.search-action-btn.primary-action{color:#fff!important}
+
+/* Modals, popovers, dropdowns */
+.modal,.modal-overlay,.dialog-overlay,.sheet-overlay{background:rgba(0,0,0,.70)!important;backdrop-filter:blur(8px)}
+.modal-card,.modal-content,.dialog,.sheet,.dropdown-menu,.context-menu{background:linear-gradient(145deg,#151f2c,#0b1119)!important;color:#f7f9ff!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:0 28px 80px rgba(0,0,0,.55)!important}
+
+/* Tables */
+table{color:#f7f9ff!important;background:#0e151f!important;border-color:rgba(255,255,255,.10)!important}
+th{background:#151f2c!important;color:#dbe7f8!important}
+td{background:#0f1721!important;color:#dbe4f2!important;border-color:rgba(255,255,255,.08)!important}
+
+/* No accidental pure-white surfaces */
+[style*="background:#fff"],[style*="background: #fff"],[style*="background:white"],[style*="background: white"]{
+  background:#121a26!important;color:#f7f9ff!important;
+}
+
+/* Logo / brand mark */
+.brand-inline::before{content:"";display:inline-block;width:30px;height:30px;margin-right:8px;vertical-align:middle;background:url('assets/tafass-logo.svg') center/contain no-repeat;filter:drop-shadow(0 4px 12px rgba(36,124,255,.25))}
+
+/* Mobile readability */
+@media(max-width:700px){
+  .main-content{padding:12px 10px 96px!important}
+  .card,.post,.composer,.settings-card,.admin-card{border-radius:18px!important}
+  .admin-dashboard-v2{padding:8px 8px 90px!important}
+  .admin-hero-v2{border-radius:22px!important;padding:20px!important}
+  .admin-stat-button{min-height:118px!important}
+  .search-result-card,.hub-card-v90,.help-card-v90{min-height:70px}
+}
