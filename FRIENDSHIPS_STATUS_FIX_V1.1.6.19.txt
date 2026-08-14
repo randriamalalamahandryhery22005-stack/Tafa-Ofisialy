@@ -1,0 +1,12 @@
+TAFA — V1.1.6.19 FRIENDSHIPS STATUS FIX
+
+Corrected app.js to match the real Supabase friendships constraint valid_friend_status:
+- pending
+- accepted
+- rejected
+- blocked
+
+Accept invitation: status = accepted.
+Refuse invitation: status = rejected.
+Cancel outgoing pending invitation: delete the pending row instead of writing an invalid cancelled status.
+No database schema change.

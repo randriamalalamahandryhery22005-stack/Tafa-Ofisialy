@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1877f2">
+  <title>Tafaß</title>
+  <link rel="stylesheet" href="style.css">
+
+<style id="tafa-message-upload-progress">
+.message-upload-progress{grid-column:1/-1;width:100%;box-sizing:border-box;padding:10px 12px;margin:0 0 8px;border:1px solid rgba(120,140,170,.22);border-radius:14px;background:rgba(20,28,45,.88);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.message-upload-progress.hidden{display:none!important}
+.message-upload-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+.message-upload-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:650}
+.message-upload-percent{font-size:13px;flex:0 0 auto}
+.message-upload-track{height:7px;width:100%;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.12)}
+.message-upload-progress-bar{display:block;height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#4f8cff,#7b61ff);transition:width .12s linear}
+.message-upload-status{display:block;margin-top:6px;opacity:.72;font-size:11px}
+@media(max-width:640px){.message-upload-progress{padding:9px 10px;border-radius:12px}}
+</style>
+</head>
+<body>
+  <!-- SPLASH PREMIUM — aucun texte, uniquement le logo et 5 étapes de chargement -->
+  <section id="splash" class="splash-screen" aria-label="Tafaß">
+    <div class="splash-logo-circle" aria-hidden="true"><img src="assets/tafass-logo.svg" alt="Tafaß"></div>
+    <div class="splash-dots" aria-hidden="true"><i data-step="1"></i><i data-step="2"></i><i data-step="3"></i><i data-step="4"></i><i data-step="5"></i></div>
+  </section>
+
+  <!-- AUTHENTIFICATION -->
+  <section id="authScreen" class="auth-screen hidden">
+    <div class="auth-brand">
+      <div class="brand-logo"><img src="assets/tafass-logo.svg" alt="Tafaß"></div>
+      <div><strong>Tafaß</strong><span>Connecter les communautés</span></div>
+    </div>
+
+    <div id="loginView" class="auth-card">
+      <div class="auth-head"><h1>Connexion</h1><p>Retrouvez votre communauté.</p></div>
+      <form id="loginForm">
+        <label>E-mail<input id="loginIdentifier" autocomplete="username" required></label>
+        <label>Mot de passe
+          <span class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" required><button type="button" data-toggle-password="loginPassword">Afficher</button></span>
+        </label>
+        <button class="btn primary wide" type="submit">Se connecter</button>
+      </form>
+      <button class="link-btn" id="forgotBtn">Mot de passe oublié ?</button>
+      <div id="savedAccounts" class="saved-accounts" aria-label="Comptes enregistrés"></div>
+      <div class="divider"><span>ou</span></div>
+      <button type="button" class="btn success wide" id="showRegister">Créer un nouveau compte</button>
+      <p class="auth-note">Connexion sécurisée par Supabase. Vos données de compte sont enregistrées sur le serveur.</p>
+    </div>
+
+    <div id="registerView" class="auth-card hidden">
+      <div class="auth-head">
+        <h1>Créer votre compte</h1>
+        <p id="registerStepTitle">Étape 1/5 — Informations personnelles</p>
+      </div>
+      <div class="progress"><span id="registerProgress"></span></div>
+      <form id="registerForm">
+        <div class="reg-step" data-step="1">
+          <label>Prénom<input id="rFirst" required></label>
+          <label>Nom<input id="rLast" required></label>
+          <label>Date de naissance<input id="rBirth" type="date" required></label>
+          <label>Genre
+            <select id="rGender"><option value="">Choisir</option><option>Femme</option><option>Homme</option><option>Autre</option><option>Je préfère ne pas préciser</option></select>
+          </label>
+          <label>Nom d'utilisateur<input id="rUsername" placeholder="ex. tahina_123" required></label>
+        </div>
+
+        <div class="reg-step hidden" data-step="2">
+          <label>Pays
+            <select id="rCountry" required></select>
+          </label>
+          <div class="phone-grid">
+            <label>Indicatif<input id="rCode" readonly></label>
+            <label>Numéro de téléphone<input id="rPhone" inputmode="tel" required></label>
+          </div>
+          <p class="field-help">L'indicatif est automatiquement lié au pays choisi et n'est pas modifiable.</p>
+        </div>
+
+        <div class="reg-step hidden" data-step="3">
+          <label>E-mail<input id="rEmail" type="email" autocomplete="email" required></label>
+          <label>Mot de passe
+            <span class="password-wrap"><input id="rPass" type="password" required><button type="button" data-toggle-password="rPass">Afficher</button></span>
+          </label>
+          <div class="strength"><span id="strengthBar"></span></div><small id="strengthText">Force du mot de passe</small>
+          <label>Confirmation<input id="rPass2" type="password" required></label>
+        </div>
+
+        <div class="reg-step hidden" data-step="4">
+          <div class="photo-picker">
+            <div id="registerAvatar" class="avatar xl">T</div>
+            <div><h3>Ajouter une photo de profil</h3><p>Elle sera utilisée dans le profil, les publications, commentaires, messages et notifications.</p></div>
+          </div>
+          <input id="rAvatarFile" type="file" accept="image/*" class="file-input">
+          <div class="file-actions"><button type="button" class="btn secondary" id="changeAvatarBtn">Choisir une photo</button><button type="button" class="btn ghost danger" id="removeAvatarBtn">Supprimer</button></div>
+          <p class="field-help">Vous pouvez continuer sans photo.</p>
+        </div>
+
+        <div class="reg-step hidden" data-step="5">
+          <div id="registerSummary" class="summary-card"></div>
+          <label class="check-row"><input id="rTerms" type="checkbox" required><span>J'accepte les conditions d'utilisation et la politique de confidentialité.</span></label>
+          <p class="field-help">La création du compte est sécurisée par Supabase Auth et vos informations sont enregistrées sur le serveur.</p>
+        </div>
+
+        <div class="reg-actions">
+          <button type="button" class="btn secondary" id="regBack">Retour</button>
+          <button type="button" class="btn primary" id="regNext">Continuer</button>
+          <button type="submit" class="btn primary hidden" id="regSubmit">Créer mon compte</button>
+        </div>
+      </form>
+      <button type="button" class="link-btn" id="showLogin" onclick="window.tafaOpenLogin && window.tafaOpenLogin(event)">J'ai déjà un compte</button>
+    </div>
+  </section>
+
+  <!-- APPLICATION SPA -->
+  <section id="appScreen" class="app-shell hidden">
+    <header class="topbar">
+      <div class="topbar-brand"><button class="brand-inline" data-route="home" aria-label="Tafaß"><b class="brand-wordmark">Tafaß</b></button></div>
+      <div class="global-search"><span>⌕</span><input id="globalSearch" placeholder="Rechercher sur Tafaß"><div id="searchSuggest" class="search-suggest hidden"></div></div>
+      <div class="top-actions">
+        <button class="icon-btn messages-action" data-route="messages" title="Messages" aria-label="Messages"><span class="top-message-icon" aria-hidden="true">⌁</span><em id="topMsgBadge" class="badge-count hidden">0</em></button>
+        <button class="icon-btn search-action" data-route="search" title="Rechercher" aria-label="Rechercher">⌕</button>
+        <button class="icon-btn menu-action" id="mobileMenu" data-route="menu" title="Menu" aria-label="Menu">☰</button>
+      </div>
+      <nav class="top-menu-nav" id="bottomNav" aria-label="Navigation principale"></nav>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar left-sidebar" id="leftSidebar">
+        <div class="user-mini" data-route="profile"><span id="sideAvatar" class="avatar">T</span><div><b id="sideName">Utilisateur</b><small id="sideHandle">@user</small></div></div>
+        <div class="sidebar-card sidebar-about"><b>Navigation premium</b><p class="muted">Utilisez la barre principale en haut pour accéder à tous les espaces de Tafaß.</p></div>
+        <div class="sidebar-bottom"><button data-route="menu">☰ Ouvrir le Menu complet</button></div>
+      </aside>
+
+      <main id="mainContent" class="main-content"></main>
+
+      <aside class="sidebar right-sidebar">
+        <div class="card"><div class="card-title"><b>Suggestions</b><button class="link-btn" data-route="friends">Voir tout</button></div><div id="rightSuggestions"></div></div>
+        <div class="card"><div class="card-title"><b>À propos de Tafaß</b></div><p class="muted">Réseau social moderne créé pour communiquer, publier et développer une communauté.</p><small>Tafaß Ofisialy · Antananarivo, Madagascar</small></div>
+      </aside>
+    </div>
+
+  </section>
+
+  <div id="modalRoot"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  
+<script src="app.js"></script>
+  <script src="ui-polish.js"></script>
+
+
+
+
+
+
+<script src="tafa-v26-ui.js"></script>
+</body>
+</html>

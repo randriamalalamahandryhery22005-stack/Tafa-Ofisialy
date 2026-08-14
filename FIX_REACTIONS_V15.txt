@@ -1,0 +1,6 @@
+TAFA V15 — REACTIONS FIXED
+
+Frontend app.js already calls tafa_set_post_reaction with p_post_id and p_reaction.
+The corrected SQL now uses post_reactions.reaction_type, accepts NULL to remove a reaction,
+and does not restrict reactions to the post owner. Counts continue to be reloaded from Supabase.
+Notifications V15 and comments/shares are preserved.

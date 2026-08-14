@@ -1,0 +1,14 @@
+TAFAß — Friends/Supabase update
+
+app.js now uses Supabase for:
+- friend_requests
+- friendships
+- envoyer une invitation
+- accepter
+- refuser
+- annuler
+- supprimer un ami
+- chargement des invitations/amis à la connexion
+- état des boutons Ajouter / Invitation envoyée / Accepter / Amis
+
+La table friend_requests doit exister dans Supabase avec les policies déjà exécutées.

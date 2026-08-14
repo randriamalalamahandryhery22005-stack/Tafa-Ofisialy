@@ -1,0 +1,10 @@
+TAFAß V13 — FIX RECHERCHE COMPTES
+
+Fix 1: Lors de la session Supabase, tous les profils de public.profiles sont maintenant chargés.
+Cela permet à Recherche de trouver un compte même s'il n'est pas ami et n'a encore aucune publication.
+
+Fix 2: La recherche des personnes utilise aussi pseudo, username, email, prénom, nom et pays comme index de recherche.
+L'e-mail sert uniquement à la recherche et n'est pas affiché comme résultat par défaut.
+
+SQL/RLS requis:
+La table public.profiles doit autoriser SELECT pour authenticated (qual = true convient).
