@@ -1460,7 +1460,7 @@ async function notify(userId,type,text,entityId=null,commentId=null){
   return local;
 }
 function routeTo(r, options={}){
-  const allowed=["home","friends","messages","search","profile","notifications","pages","groups","videos","marketplace","reels","saved","events","menu","settings","privacy","security","accounts","language","accessibility","devices","payments","badge","ads","activity","help","terms","about","admin","admin-users","admin-reports","admin-badges","admin-posts","pageView"];
+  const allowed=["home","friends","messages","search","profile","notifications","pages","groups","videos","marketplace","reels","saved","events","menu","settings","privacy","security","accounts","language","accessibility","devices","payments","badge","ads","activity","help","terms","about","admin","admin-users","admin-reports","admin-badges","admin-posts","admin-pages","admin-groups","admin-comments","admin-messages","admin-settings","pageView"];
   if(!allowed.includes(r)) r="home";
   if(!options.replace && route!==r) routeHistory.push(route);
   route=r;
@@ -1533,7 +1533,7 @@ function renderRoute(){
     case"security":return renderSecurity();case"accounts":return renderAccounts();case"language":return renderLanguage();case"accessibility":return renderAccessibility();
     case"devices":return renderDevices();case"payments":return renderPayments();case"badge":return renderBadge();case"ads":return renderAds();
     case"activity":return renderActivity();case"help":return renderHelp();case"terms":return renderTerms();case"about":return renderAbout();case"admin":return renderAdmin();
-    case"admin-users":return renderAdminUsers();case"admin-reports":return renderAdminReports();case"admin-badges":return renderAdminBadges();case"admin-posts":return renderAdminPosts();case"pageView":return renderPageView(editingPageId);default:return renderHome();
+    case"admin-users":return renderAdminUsers();case"admin-reports":return renderAdminReports();case"admin-badges":return renderAdminBadges();case"admin-posts":return renderAdminPosts();case"admin-pages":return renderAdminPages();case"admin-groups":return renderAdminGroups();case"admin-comments":return renderAdminComments();case"admin-messages":return renderAdminMessages();case"admin-settings":return renderAdminSettings();case"pageView":return renderPageView(editingPageId);default:return renderHome();
   }
 }
 function renderHome(){
@@ -2513,83 +2513,68 @@ function renderAdminPosts(){
   const posts=state.posts||[];
   return `${routeBackBar("Administration","admin")}<section class="admin-dashboard"><div class="admin-head"><div><span class="eyebrow">TAFAß · MODÉRATION</span><h1>Publications</h1><p>Modération des contenus publiés.</p></div></div><div class="admin-panel">${posts.length?posts.slice(0,100).map(p=>`<div class="admin-row"><div class="admin-grow"><b>${esc((p.text||"Publication").slice(0,90))}</b><small>${esc(displayName(findUser(p.ownerId)||{}))} · ${timeAgo(p.createdAt)}</small></div><button class="btn ghost danger" data-action="adminDeletePost" data-id="${esc(p.id)}">Supprimer</button></div>`).join(""):'<div class="admin-empty">Aucune publication.</div>'}</div></section>`;
 }
+function adminGuard(){ return isAdminAccount(); }
+function adminCollection(key){ return Array.isArray(state[key])?state[key]:[]; }
+function adminOwnerName(id){ const u=findUser(id)||{}; return displayName(u)||u.username||u.email||"Utilisateur"; }
+function adminCountByOwner(items, ownerKeys=["ownerId","userId","user_id"]){
+  const map={}; items.forEach(x=>{const k=ownerKeys.find(a=>x?.[a]!=null); if(k)map[x[k]]=(map[x[k]]||0)+1;}); return map;
+}
 function renderAdmin(){
-  if(!isAdminAccount()) return `${routeBackBar("Menu","menu")}<section class="card"><h2>Accès refusé</h2><p>Cette section est réservée à l'administrateur officiel.</p></section>`;
-
-
-  const users=Array.isArray(state.users)?state.users:[];
-  const posts=Array.isArray(state.posts)?state.posts:[];
-  const comments=Array.isArray(state.comments)?state.comments:[];
-  const messages=Array.isArray(state.messages)?state.messages:[];
-  const badgeRequests=Array.isArray(state.badgeRequests)?state.badgeRequests:[];
-  const reports=Array.isArray(state.reports)?state.reports:[];
-  const mediaCount=posts.filter(p=>p?.media_url||p?.mediaUrl||p?.media_type||p?.mediaType).length;
-  const verifiedCount=users.filter(u=>u?.verified||isAdminUser(u)).length;
-  const pendingBadges=badgeRequests.filter(r=>String(r.status||"pending").toLowerCase()==="pending").length;
+  if(!adminGuard()) return `${routeBackBar("Menu","menu")}<section class="card"><h2>Accès refusé</h2><p>Cette section est réservée à l'administrateur officiel.</p></section>`;
+  const users=adminCollection("users"),posts=adminCollection("posts"),comments=adminCollection("comments"),messages=adminCollection("messages"),pages=adminCollection("pages"),groups=adminCollection("groups"),reports=adminCollection("reports"),badgeRequests=adminCollection("badgeRequests");
   const pendingReports=reports.filter(r=>String(r.status||"pending").toLowerCase()==="pending").length;
-
-  const recentUsers=users.slice(-5).reverse().map(u=>`
-    <div class="admin-row">
-      <div class="admin-avatar">${String(u.name||u.username||u.email||"?").slice(0,1).toUpperCase()}</div>
-      <div class="admin-grow"><b>${escapeHtml(u.name||u.username||u.email||"Utilisateur")}</b><small>${escapeHtml(u.email||"")}</small></div>
-      ${isAdminUser(u)?'<span class="admin-pill blue">✓ ADMIN</span>':''}
-    </div>`).join("") || `<div class="admin-empty">Aucun utilisateur</div>`;
-
-  const stats=[
-    ["👥","Utilisateurs",users.length],
-    ["📝","Publications",posts.length],
-    ["💬","Messages",messages.length],
-    ["🖼️","Médias",mediaCount],
-    ["🔵","Comptes vérifiés",verifiedCount],
-    ["🛡️","Signalements",pendingReports]
+  const pendingBadges=badgeRequests.filter(r=>String(r.status||"pending").toLowerCase()==="pending").length;
+  const verifiedCount=users.filter(u=>u?.verified||isAdminUser(u)).length;
+  const mediaCount=posts.filter(p=>p?.media_url||p?.mediaUrl||p?.media_type||p?.mediaType).length;
+  const cards=[
+    ["👥","Utilisateurs",users.length,"adminUsers","Comptes et modération"],
+    ["📄","Pages",pages.length,"adminPages","Pages de la plateforme"],
+    ["👥","Groupes",groups.length,"adminGroups","Communautés"],
+    ["📝","Publications",posts.length,"adminPosts","Contenus publiés"],
+    ["💬","Commentaires",comments.length,"adminComments","Commentaires récents"],
+    ["✉️","Messages",messages.length,"adminMessages","Activité des messages"],
+    ["🛡️","Signalements",pendingReports,"adminReports","À traiter"],
+    ["🔵","Badges bleus",pendingBadges,"adminBadges","Demandes en attente"]
   ];
-
   return `${routeBackBar("Menu","menu")}
-  <section class="admin-dashboard">
-    <div class="admin-head">
-      <div>
-        <span class="eyebrow">TAFAß · ADMINISTRATION</span>
-        <h1>Tableau de bord</h1>
-        <p>Vue globale et gestion de la plateforme.</p>
+  <section class="admin-dashboard admin-dashboard-v2">
+    <div class="admin-hero-v2"><div><span class="eyebrow">TAFAß · ADMINISTRATION</span><h1>Centre d'administration</h1><p>Gérez la plateforme depuis un espace unique, clair et sécurisé.</p></div><div class="admin-official"><span>✓</span><div><b>Administrateur officiel</b><small>Accès protégé</small></div></div></div>
+    <div class="admin-stat-grid admin-stat-grid-v2">${cards.map(c=>`<button type="button" class="admin-stat admin-stat-button" data-action="${c[3]}"><span class="admin-stat-icon">${c[0]}</span><div><strong>${c[1]==="Signalements"||c[1]==="Badges bleus"?c[2]:c[2]}</strong><small>${c[1]}</small><em>${c[4]}</em></div><span class="admin-arrow">›</span></button>`).join("")}</div>
+    <div class="admin-grid admin-grid-v2">
+      <div class="admin-panel"><div class="admin-panel-title"><div><b>Vue plateforme</b><small>État actuel de Tafaß</small></div><span class="admin-live">● LIVE</span></div>
+        ${[["Utilisateurs",users.length],["Publications",posts.length],["Pages",pages.length],["Groupes",groups.length],["Commentaires",comments.length],["Médias",mediaCount]].map(x=>`<div class="admin-progress-row"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("")}
       </div>
-      <div class="admin-official"><span>✓</span><div><b>Admin officiel</b><small>Accès sécurisé</small></div></div>
+      <div class="admin-panel"><div class="admin-panel-title"><div><b>Actions rapides</b><small>Accès direct</small></div></div><div class="admin-actions admin-actions-v2">
+        <button class="admin-action" data-action="adminReports">🛡️<span>Modération<small>${pendingReports} signalement(s)</small></span></button>
+        <button class="admin-action" data-action="adminBadges">🔵<span>Badge Bleu<small>${pendingBadges} demande(s)</small></span></button>
+        <button class="admin-action" data-action="adminSettings">⚙️<span>Paramètres<small>Configuration admin</small></span></button>
+        <button class="admin-action" data-action="adminUsers">👥<span>Utilisateurs<small>Gérer les comptes</small></span></button>
+      </div></div>
     </div>
-
-    <div class="admin-stat-grid">
-      ${stats.map(s=>`<div class="admin-stat"><span class="admin-stat-icon">${s[0]}</span><div><strong>${s[2]}</strong><small>${s[1]}</small></div></div>`).join("")}
-    </div>
-
-    <div class="admin-grid">
-      <div class="admin-panel">
-        <div class="admin-panel-title"><div><b>Activité</b><small>État actuel de Tafaß</small></div><span class="admin-live">● LIVE</span></div>
-        <div class="admin-progress-row"><span>Utilisateurs actifs</span><b>${users.length}</b></div>
-        <div class="admin-progress-row"><span>Publications</span><b>${posts.length}</b></div>
-        <div class="admin-progress-row"><span>Demandes badge en attente</span><b>${pendingBadges}</b></div>
-        <div class="admin-progress-row"><span>Signalements en attente</span><b>${pendingReports}</b></div>
-      </div>
-
-      <div class="admin-panel">
-        <div class="admin-panel-title"><div><b>Actions rapides</b><small>Administration</small></div></div>
-        <div class="admin-actions">
-          <button type="button" class="admin-action" data-action="adminUsers">👥<span>Utilisateurs<small>Gérer les comptes</small></span></button>
-          <button type="button" class="admin-action" data-action="adminReports">🛡️<span>Modération<small>${pendingReports} en attente</small></span></button>
-          <button class="admin-action" data-action="adminBadges">🔵<span>Badges bleus<small>${pendingBadges} demandes</small></span></button>
-          <button class="admin-action" data-action="adminPosts">📝<span>Publications<small>Modérer les contenus</small></span></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="admin-panel">
-      <div class="admin-panel-title"><div><b>Utilisateurs récents</b><small>Derniers comptes chargés</small></div></div>
-      ${recentUsers}
-    </div>
-
-    <div class="admin-panel admin-security">
-      <div><span class="security-icon">🔐</span><div><b>Sécurité administrateur</b><small>Le statut Admin est lié au compte Supabase Auth officiel. Les autres comptes ne peuvent pas s'attribuer ce rôle depuis le client.</small></div></div>
-      <span class="admin-pill green">PROTÉGÉ</span>
-    </div>
+    <div class="admin-panel admin-security"><div><span class="security-icon">🔐</span><div><b>Sécurité administrateur</b><small>Le rôle Admin reste lié au compte Supabase Auth officiel. Le client ne peut pas s'auto-attribuer ce rôle.</small></div></div><span class="admin-pill green">PROTÉGÉ</span></div>
   </section>`;
 }
+function renderAdminUsers(){
+  if(!adminGuard())return routeTo("home"); const users=adminCollection("users");
+  return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · COMPTES</span><h1>Utilisateurs</h1><p>Consultez les comptes chargés et leurs statuts.</p></div></div><div class="admin-toolbar"><input class="input" id="adminUserSearch" placeholder="Rechercher un utilisateur…"><span class="admin-pill">${users.length} compte(s)</span></div><div class="admin-panel" id="adminUsersList">${users.map(u=>`<div class="admin-row"><div class="admin-avatar">${esc(String(u.name||u.username||u.email||"?").slice(0,1).toUpperCase())}</div><div class="admin-grow"><b>${esc(displayName(u))}</b><small>@${esc(u.username||"")} · ${esc(u.email||"")}</small></div>${isAdminUser(u)?'<span class="admin-pill blue">✓ ADMIN</span>':`<span class="admin-pill">ACTIF</span><button class="btn ghost danger" data-action="adminDeleteUser" data-id="${esc(u.id)}">Supprimer</button>`}</div>`).join("")||'<div class="admin-empty">Aucun utilisateur chargé.</div>'}</div></section>`;
+}
+function renderAdminReports(){
+  if(!adminGuard())return routeTo("home"); const reports=adminCollection("reports");
+  return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · MODÉRATION</span><h1>Signalements</h1><p>Contenus signalés par la communauté.</p></div></div><div class="admin-panel">${reports.length?reports.map(r=>`<div class="admin-row"><div class="admin-grow"><b>${esc(r.type||"Signalement")}</b><small>Cible : ${esc(r.targetId||r.target_id||"")} · ${timeAgo(r.createdAt||r.created_at)}</small></div><span class="admin-pill ${String(r.status||"pending")==="resolved"?"green":"orange"}">${esc(r.status||"pending")}</span></div>`).join(""):'<div class="admin-empty">Aucun signalement.</div>'}</div></section>`;
+}
+function renderAdminBadges(){
+  if(!adminGuard())return routeTo("home"); const req=adminCollection("badgeRequests");
+  return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · VÉRIFICATION</span><h1>Badge Bleu</h1><p>Traitez les demandes de vérification en 5 étapes.</p></div></div><div class="admin-panel">${req.length?req.map(r=>`<div class="admin-row"><div class="admin-grow"><b>${esc(r.userName||r.username||r.userId||"Utilisateur")}</b><small>${esc(r.status||"pending")} · ${timeAgo(r.createdAt)}</small></div><button class="btn primary" data-action="adminApproveBadge" data-id="${esc(r.id)}">Approuver</button><button class="btn ghost danger" data-action="adminRejectBadge" data-id="${esc(r.id)}">Refuser</button></div>`).join(""):'<div class="admin-empty">Aucune demande.</div>'}</div></section>`;
+}
+function renderAdminPosts(){
+  if(!adminGuard())return routeTo("home"); const posts=adminCollection("posts");
+  return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · CONTENUS</span><h1>Publications</h1><p>Modération des publications et médias.</p></div></div><div class="admin-panel">${posts.length?posts.slice().reverse().slice(0,100).map(p=>`<div class="admin-row"><div class="admin-grow"><b>${esc((p.text||p.content||"Publication").slice(0,100))}</b><small>${esc(adminOwnerName(p.ownerId||p.user_id))} · ${timeAgo(p.createdAt||p.created_at)}</small></div><button class="btn ghost danger" data-action="adminDeletePost" data-id="${esc(p.id)}">Supprimer</button></div>`).join(""):'<div class="admin-empty">Aucune publication.</div>'}</div></section>`;
+}
+function renderAdminPages(){ if(!adminGuard())return routeTo("home"); const items=adminCollection("pages"); return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · PAGES</span><h1>Pages</h1><p>Vue globale des Pages disponibles dans l'état actuel de l'application.</p></div></div><div class="admin-panel">${items.length?items.map(x=>`<div class="admin-row"><div class="admin-avatar">📄</div><div class="admin-grow"><b>${esc(x.name||x.title||"Page")}</b><small>${esc(x.username||x.slug||x.ownerId||"")}</small></div><span class="admin-pill">Page</span></div>`).join(""):'<div class="admin-empty">Aucune Page chargée.</div>'}</div></section>`; }
+function renderAdminGroups(){ if(!adminGuard())return routeTo("home"); const items=adminCollection("groups"); return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · COMMUNAUTÉS</span><h1>Groupes</h1><p>Vue globale des communautés.</p></div></div><div class="admin-panel">${items.length?items.map(x=>`<div class="admin-row"><div class="admin-avatar">👥</div><div class="admin-grow"><b>${esc(x.name||x.title||"Groupe")}</b><small>${esc(x.privacy||x.visibility||"")}</small></div><span class="admin-pill">Groupe</span></div>`).join(""):'<div class="admin-empty">Aucun Groupe chargé.</div>'}</div></section>`; }
+function renderAdminComments(){ if(!adminGuard())return routeTo("home"); const items=adminCollection("comments"); return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · COMMENTAIRES</span><h1>Commentaires</h1><p>Derniers commentaires visibles dans l'état local chargé.</p></div></div><div class="admin-panel">${items.slice().reverse().slice(0,100).map(x=>`<div class="admin-row"><div class="admin-grow"><b>${esc(x.content||x.text||"Commentaire")}</b><small>${esc(adminOwnerName(x.userId||x.user_id))} · ${timeAgo(x.createdAt||x.created_at)}</small></div></div>`).join("")||'<div class="admin-empty">Aucun commentaire chargé.</div>'}</div></section>`; }
+function renderAdminMessages(){ if(!adminGuard())return routeTo("home"); const items=adminCollection("messages"); return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · MESSAGES</span><h1>Messages</h1><p>Statistiques et aperçu de l'activité des messages. Le contenu privé n'est pas affiché automatiquement.</p></div></div><div class="admin-panel"><div class="admin-message-safe"><span>🔒</span><div><b>Respect de la vie privée</b><small>Cette section affiche uniquement le volume chargé. Les conversations privées ne sont pas ouvertes automatiquement à l'administrateur.</small></div><strong>${items.length}</strong></div></div></section>`; }
+function renderAdminSettings(){ if(!adminGuard())return routeTo("home"); return `${routeBackBar("Administration","admin")}<section class="admin-dashboard admin-subpage"><div class="admin-head"><div><span class="eyebrow">TAFAß · CONFIGURATION</span><h1>Paramètres Admin</h1><p>Contrôles visuels et sécurité du centre d'administration.</p></div></div><div class="admin-panel"><div class="admin-setting-row"><div><b>Protection du rôle Admin</b><small>Compte Supabase Auth officiel uniquement.</small></div><span class="admin-pill green">ACTIVÉ</span></div><div class="admin-setting-row"><div><b>Supabase / Realtime</b><small>Aucune modification de schéma depuis ce panneau.</small></div><span class="admin-pill green">PRÉSERVÉ</span></div><div class="admin-setting-row"><div><b>Modération</b><small>Publications, signalements et badges.</small></div><span class="admin-pill blue">PRÊT</span></div></div></section>`; }
 
 function renderSuggestions(n){const users=state.users.filter(u=>u.id!==state.current&&!isFriend(u.id)).slice(0,n);return users.length?users.map(u=>`<div class="list-item">${avatar(u,"avatar sm")}<div class="list-main"><b>${esc(displayName(u))}</b><small>@${esc(u.username)}</small></div><button class="link-btn" data-action="addFriend" data-id="${u.id}">Ajouter</button></div>`).join(""):`<div class="empty">Pas encore de suggestions.</div>`;}
 
@@ -2818,6 +2803,11 @@ async function handleAction(e,el){
   if(a==="adminReports")return routeTo("admin-reports");
   if(a==="adminBadges")return routeTo("admin-badges");
   if(a==="adminPosts")return routeTo("admin-posts");
+  if(a==="adminPages")return routeTo("admin-pages");
+  if(a==="adminGroups")return routeTo("admin-groups");
+  if(a==="adminComments")return routeTo("admin-comments");
+  if(a==="adminMessages")return routeTo("admin-messages");
+  if(a==="adminSettings")return routeTo("admin-settings");
   if(a==="adminDeletePost"){ const p=state.posts.find(x=>x.id===id); if(!p)return; if(supabaseReady()){const {error}=await SB.from("posts").delete().eq("id",id); if(error)return toast("Suppression impossible : "+error.message);} state.posts=state.posts.filter(x=>x.id!==id); save(); render(); return toast("Publication supprimée ✓"); }
   if(a==="adminApproveBadge")return badgeDecision(id,true);
   if(a==="adminRejectBadge")return badgeDecision(id,false);
