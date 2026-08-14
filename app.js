@@ -4092,17 +4092,37 @@ function initAuth(){
   $("registerForm").onsubmit=async e=>{e.preventDefault();if(registerStep!==5)return;if(!validateRegStep(5))return;await createAccount();};
 }
 function showRegisterStep(){
-  document.querySelectorAll(".reg-step").forEach(x=>x.classList.toggle("hidden",Number(x.dataset.step)!==registerStep));
+  const current=Math.min(5,Math.max(1,Number(registerStep)||1));
+  registerStep=current;
+
+  // Une seule étape est rendue visible à la fois.
+  // Les étapes futures restent totalement masquées jusqu'à validation de l'étape actuelle.
+  document.querySelectorAll(".reg-step").forEach(x=>{
+    const isCurrent=Number(x.dataset.step)===current;
+    x.classList.toggle("hidden",!isCurrent);
+    x.setAttribute("aria-hidden",String(!isCurrent));
+  });
+
   const progress=$("registerProgress");
-  if(progress) progress.style.width=(registerStep*20)+"%";
+  if(progress){
+    progress.style.width=(current*20)+"%";
+    progress.setAttribute("aria-valuenow",String(current));
+    progress.setAttribute("aria-label",`Étape ${current} sur 5`);
+  }
+
   const titles=["Informations personnelles","Pays et téléphone","Compte","Photo de profil","Finalisation"];
   const title=$("registerStepTitle");
-  if(title) title.textContent=`Étape ${registerStep}/5 — ${titles[registerStep-1]}`;
+  if(title) title.textContent=`Étape ${current}/5 — ${titles[current-1]}`;
+
   const back=$("regBack"), next=$("regNext"), submit=$("regSubmit");
-  if(back) back.textContent=registerStep===1?"Annuler":"Retour";
-  if(next) next.classList.toggle("hidden",registerStep===5);
-  if(submit) submit.classList.toggle("hidden",registerStep!==5);
-  if(registerStep===5) buildSummary();
+  // Le bouton Retour reste toujours présent, y compris à l'étape 1.
+  if(back){
+    back.textContent="Retour";
+    back.setAttribute("aria-label",current===1?"Retour à la connexion":"Retour à l'étape précédente");
+  }
+  if(next) next.classList.toggle("hidden",current===5);
+  if(submit) submit.classList.toggle("hidden",current!==5);
+  if(current===5) buildSummary();
 }
 function validateRegStep(s){
   if(s===1){

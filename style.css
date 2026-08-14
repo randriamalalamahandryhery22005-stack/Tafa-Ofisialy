@@ -4025,3 +4025,14 @@ body.dark .top-actions .menu-action{
   .menu-copy-v87 small{font-size:9px}
 }
 @media(max-width:390px){.menu-grid-v87{grid-template-columns:1fr}.menu-card-v87{min-height:70px}}
+
+/* ===== INSCRIPTION V26 — WIZARD STRICTEMENT SÉQUENTIEL ===== */
+#registerView .reg-step.hidden{display:none!important}
+#registerView .reg-step[aria-hidden="true"]{display:none!important}
+#registerView .reg-step[aria-hidden="false"]{display:grid!important}
+#registerView .progress{position:relative;height:6px!important;border-radius:999px!important;overflow:hidden!important}
+#registerView #registerProgress{display:block!important;height:100%!important;border-radius:inherit!important;transition:width .28s ease!important}
+#registerView .reg-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+#registerView .reg-actions #regSubmit{grid-column:1 / -1!important}
+#registerView .reg-actions #regNext{grid-column:1 / -1!important}
+#registerView .reg-actions #regBack{grid-column:1 / -1!important}
