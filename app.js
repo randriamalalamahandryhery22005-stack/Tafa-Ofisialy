@@ -2754,6 +2754,8 @@ async function handleAction(e,el){
     return;
   }
   if(a==="createGroup")return createGroup();
+  if(a==="refreshGroups"){ if(supabaseReady()) return loadSupabaseGroups().then(()=>render()).catch(e=>toast(e?.message||"Actualisation impossible")); return render(); }
+  if(a==="clearGroupSearch"){ window.groupSearch=""; return render(); }
   if(a==="joinGroup")return joinGroup(id);
   if(a==="leaveGroup")return leaveGroup(id);
   if(a==="viewGroup")return viewGroup(id);
@@ -3573,16 +3575,46 @@ async function voteGroupPoll(pollId,optionId){
 }
 
 function renderGroups(){
-  const groups=(state.groups||[]);
+  const allGroups=(state.groups||[]);
+  const q=String(window.groupSearch||"").trim().toLowerCase();
+  const groups=q?allGroups.filter(g=>`${g.name||""} ${g.description||""} ${g.category||""}`.toLowerCase().includes(q)):allGroups;
+  const mine=allGroups.filter(g=>g.is_member===true||g.joined===true).length;
+  const publicCount=allGroups.filter(g=>String(g.visibility||g.privacy||"public").toLowerCase()!=="private"&&String(g.privacy||"").toLowerCase()!=="privé").length;
   return `${routeBackBar("Menu","menu")}<section class="groups-hub premium-page">
-    <div class="groups-hub-head"><div><span class="eyebrow">TAFAß · COMMUNAUTÉS</span><h1>Groupes</h1><p>Vos communautés synchronisées en temps réel.</p></div>
-      <button type="button" class="btn primary" data-action="createGroup">＋ Créer un groupe</button></div>
+    <div class="groups-hub-head">
+      <div class="groups-head-copy"><span class="eyebrow">TAFAß · COMMUNAUTÉS</span><h1>Groupes</h1><p>Découvrez, rejoignez et animez vos communautés Tafaß.</p></div>
+      <button type="button" class="btn primary groups-create-btn" data-action="createGroup"><span>＋</span> Créer un groupe</button>
+    </div>
+    <div class="groups-overview">
+      <div><span>Communautés</span><b>${allGroups.length}</b></div>
+      <div><span>Mes groupes</span><b>${mine}</b></div>
+      <div><span>Publics</span><b>${publicCount}</b></div>
+    </div>
+    <div class="groups-toolbar">
+      <label class="groups-search"><span>⌕</span><input id="groupSearchInput" value="${esc(window.groupSearch||"")}" placeholder="Rechercher un groupe..."></label>
+      <button type="button" class="group-toolbar-btn" data-action="refreshGroups">↻ Actualiser</button>
+    </div>
     <div class="groups-grid">
-      ${groups.map(g=>`<article class="group-list-card">
-        <div class="group-list-cover" ${g.cover_url?`style="background-image:url('${esc(g.cover_url)}')"`:""}><span>${g.privacy==="Privé"?"🔒":"🌐"}</span></div>
-        <div class="group-list-body"><h3>${esc(g.name)}</h3><p>${esc(g.description||"Communauté Tafaß")}</p><small>👥 ${Number(g.member_count||g.members?.length||0)} membres · ${esc(g.category||"Général")}</small>
-        <button type="button" class="btn primary wide" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}">Voir le groupe</button></div>
-      </article>`).join("") || `<div class="card empty"><b>Aucun groupe</b><p>Créez votre première communauté.</p></div>`}
+      ${groups.map(g=>{
+        const count=Number(g.member_count||g.members?.length||0);
+        const privacy=String(g.visibility||g.privacy||"public").toLowerCase();
+        const cover=g.cover_url||g.coverUrl||"";
+        const initials=String(g.name||"G").trim().slice(0,1).toUpperCase();
+        return `<article class="group-list-card">
+          <button type="button" class="group-card-open" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}" aria-label="Voir ${esc(g.name||"le groupe")}">
+            <div class="group-list-cover" ${cover?`style="background-image:url('${esc(cover)}')"`:""}>
+              <div class="group-cover-placeholder"><span>${esc(initials)}</span></div>
+              <span class="group-privacy-badge">${privacy==="private"||privacy==="privé"?"🔒 Privé":"🌐 Public"}</span>
+            </div>
+          </button>
+          <div class="group-list-body">
+            <div class="group-card-title-row"><h3>${esc(g.name||"Groupe")}</h3><span>${esc(g.category||"Général")}</span></div>
+            <p>${esc(g.description||"Communauté Tafaß")}</p>
+            <div class="group-card-meta"><span>👥 ${count} membre${count>1?"s":""}</span><span>•</span><span>${privacy==="private"||privacy==="privé"?"Privé":"Public"}</span></div>
+            <button type="button" class="btn primary wide" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}">Voir le groupe <span>›</span></button>
+          </div>
+        </article>`;
+      }).join("") || `<div class="groups-empty card"><div class="groups-empty-icon">◆</div><b>${q?"Aucun groupe trouvé":"Aucun groupe"}</b><p>${q?"Essayez un autre nom ou mot-clé.":"Créez votre première communauté Tafaß."}</p>${q?`<button class="btn secondary" data-action="clearGroupSearch">Effacer la recherche</button>`:`<button class="btn primary" data-action="createGroup">＋ Créer un groupe</button>`}</div>`}
     </div>
   </section>`;
 }
