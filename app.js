@@ -1331,14 +1331,14 @@ function localizeApp(){
 }
 
 const MENU_ITEMS = [
-["profile","◯","Profil"],["friends","♧","Amis"],
+["profile","◯","Profil"],["friends","♧","Amis"],["messages","✉","Messages"],
 ["videos","▶","Vidéos"],["reels","◆","Reels"],["notifications","♢","Notifications"],["pages","▤","Pages"],["groups","◉","Groupes"],
-["saved","🔖","Enregistrés"],["events","◫","Événements"],
+["saved","🔖","Enregistrer"],["events","◫","Événement"],
 ["settings","⚙","Paramètres"],["privacy","◌","Confidentialité"],["security","🔒","Sécurité"],
 ["accounts","◎","Comptes"],["language","文","Langue"],["accessibility","♿","Accessibilité"],
-["devices","▣","Appareils"],["payments","◇","Paiements"],["badge","✓","Badge bleu"],
+["devices","▣","Appareils"],["payments","◇","Paiements"],["badge","✓","Badge Bleu · 5 étapes"],
 ["ads","▥","Publicités"],["activity","◷","Activité"],["help","?","Aide"],["terms","§","Conditions"],
-["about","ⓘ","À propos"],["switchAccount","⇄","Changer un autre compte"],["admin","♛","Administration"],["logout","↪","Déconnexion"]
+["about","ⓘ","À propos de Tafaß"],["switchAccount","⇄","Changer un autre compte"],["admin","♛","Administration"],["logout","↪","Déconnexion"]
 ];
 
 const PAGE_CATS = [
@@ -1941,8 +1941,8 @@ function messageAttachmentHtml(file){
 }
 function renderChatPremium(c){
   const other=c.type==="group"?null:findUser(c.members.find(x=>x!==state.current)); const msgs=state.messages.filter(m=>m.conversationId===c.id).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
-  return `<header class="chat-top-premium"><button class="icon-btn chat-back-btn" data-action="backToMessages" title="Retour">‹</button>${avatar(other||{name:c.name},"avatar") }<div><b>${esc(c.type==="group"?c.name:displayName(other))}</b><small>${c.type==="group"?`${c.members.length} membres`:isOnline(other)?"En ligne":"Hors ligne"}</small></div><div class="chat-tools"><button class="icon-btn" data-action="voiceCall" data-id="${other?.id||c.id}" title="Appel vocal">☎</button><button class="icon-btn" data-action="voiceVideoCall" data-id="${other?.id||c.id}" title="Appel vidéo">▣</button></div></header>
-  <div class="chat-body-premium">${msgs.length?msgs.map(m=>`<div class="bubble-premium ${m.from===state.current?"mine":""}">${m.files?.map(messageAttachmentHtml).join("")||messageAttachmentHtml(m.file)}${m.text?`<div>${esc(m.text)}</div>`:""}<small>${timeAgo(m.createdAt)}${m.from===state.current?` · <span class="message-status ${m.read?"read":"sent"}">${m.read?"✓✓":"✓"}</span>`:""}</small></div>`).join(""):`<div class="chat-empty"><div class="chat-empty-icon">◈</div><b>Aucun message</b><span>Écrivez votre premier message.</span></div>`}</div>
+  return `<header class="chat-top-premium"><button class="icon-btn chat-back-btn" data-action="backToMessages" title="Retour">‹</button>${avatar(other||{name:c.name},"avatar") }<div><b>${esc(c.type==="group"?c.name:displayName(other))}</b><small>${c.type==="group"?`${c.members.length} membres`:isOnline(other)?"En ligne":"Hors ligne"}</small></div><div class="chat-tools"><button class="icon-btn" data-action="voiceCall" data-id="${other?.id||c.id}" title="Appel vocal">☎</button><button class="icon-btn" data-action="voiceVideoCall" data-id="${other?.id||c.id}" title="Appel vidéo">▣</button><button class="icon-btn" data-action="conversationMore" data-id="${c.id}" title="Options de la conversation">•••</button></div></header>
+  <div class="chat-body-premium">${msgs.length?msgs.map(m=>`<div class="bubble-wrap-v87 ${m.from===state.current?"mine":""}"><div class="bubble-premium ${m.from===state.current?"mine":""}">${m.files?.map(messageAttachmentHtml).join("")||messageAttachmentHtml(m.file)}${m.text?`<div>${esc(m.text)}</div>`:""}<small>${timeAgo(m.createdAt)}${m.from===state.current?` · <span class="message-status ${m.read?"read":"sent"}">${m.read?"✓✓":"✓"}</span>`:""}</small></div><button type="button" class="message-more-v87" data-action="messageMore" data-id="${esc(m.id)}" title="Options du message">•••</button></div>`).join(""):`<div class="chat-empty"><div class="chat-empty-icon">◈</div><b>Aucun message</b><span>Écrivez votre premier message.</span></div>`}</div>
   <form class="chat-compose-premium" data-chat-form="${c.id}"><div id="messageUploadProgress" class="message-upload-progress hidden"><div class="message-upload-top"><span class="message-upload-name">Fichier</span><b class="message-upload-percent">0%</b></div><div class="message-upload-track"><span class="message-upload-progress-bar"></span></div><small class="message-upload-status">Préparation…</small></div><button type="button" class="icon-btn" data-action="attachFile" title="Photo, vidéo ou fichier">＋</button><button type="button" class="icon-btn voice-record-btn ${voiceRecording?'recording':''}" data-action="recordVoice" title="${voiceRecording?'Arrêter l’enregistrement':'Message vocal'}">${voiceRecording?'■':'🎙'}</button><input id="chatFile_${c.id}" type="file" class="hidden" multiple accept="image/*,video/*,audio/*,.apk,.pdf,.zip,.rar,.7z,.doc,.docx,.xls,.xlsx,.txt,.ppt,.pptx,.csv,.json,.html,.css,.js"><div class="chat-input-shell"><input name="text" placeholder="Message"><span class="chat-file-hint">Photo · Vidéo · Fichier</span></div><button class="send-btn" title="Envoyer">➤</button></form>`;
 }
 function renderPages(){
@@ -2235,31 +2235,41 @@ function renderMenu(){
   const u=me();
   const adminVisible=isAdminAccount(u);
   const items=MENU_ITEMS.filter(([id])=>id!=="admin"||adminVisible);
-  return `${routeBackBar("Actualités","home")}${pageBar}<section class="menu-premium-page menu-v86">
-    <div class="menu-identity-v86">
-      <div class="menu-profile-v86" data-route="profile">
-        ${avatar(u,"avatar lg")}
-        <div class="menu-profile-copy-v86">
-          <strong>${esc(displayName(u))}</strong>
-          <span>@${esc(u?.username||"")}</span>
-          <small>${u?.type==="page"?"PAGE":"COMPTE"} ${u?.verified?"· VÉRIFIÉ":""}</small>
-        </div>
-        <span class="menu-arrow-v86">›</span>
-      </div>
-      <button class="menu-switch-v86" data-action="switchAccount" type="button">
-        <span class="switch-icon-v86">⇄</span>
-        <span><strong>Changer un autre compte</strong><small>Basculer vers un compte enregistré</small></span>
-        <span class="menu-arrow-v86">›</span>
+  const desc={
+    profile:"Votre profil et vos informations personnelles", friends:"Invitations, amis et abonnements",
+    videos:"Regarder et publier des vidéos", reels:"Courtes vidéos et créations", notifications:"Vos alertes et activités récentes",
+    pages:"Gérer vos Pages professionnelles", groups:"Créer et gérer vos communautés", saved:"Retrouver vos contenus enregistrés",
+    events:"Créer et suivre vos événements", settings:"Préférences et paramètres du compte", privacy:"Contrôler votre confidentialité",
+    security:"Protéger votre compte et vos sessions", accounts:"Gérer les comptes liés", language:"Choisir la langue de Tafaß",
+    accessibility:"Adapter l’interface à vos besoins", devices:"Voir les appareils connectés", payments:"Paiements et historique",
+    badge:"Demande de vérification en 5 étapes", ads:"Préférences publicitaires", activity:"Historique de votre activité",
+    help:"Aide et assistance Tafaß", terms:"Conditions d’utilisation de Tafaß", about:"Présentation officielle de Tafaß",
+    switchAccount:"Basculer vers un compte enregistré", admin:"Outils d’administration", logout:"Quitter votre session"
+  };
+  const sections=[
+    ["Votre espace",["profile","friends","notifications","messages"]],
+    ["Créer et découvrir",["pages","groups","videos","reels","saved","events"]],
+    ["Compte et sécurité",["settings","privacy","security","accounts","language","accessibility","devices","payments","badge"]],
+    ["Informations et assistance",["ads","activity","help","terms","about","switchAccount","admin","logout"]]
+  ];
+  const byId=new Map(items.map(x=>[x[0],x]));
+  return `${routeBackBar("Actualités","home")}${pageBar}<section class="menu-premium-page menu-v87">
+    <div class="menu-identity-v87">
+      <button class="menu-profile-v87" data-route="profile" type="button">
+        ${avatar(u,"avatar lg")}<span><strong>${esc(displayName(u))}</strong><small>@${esc(u?.username||"")}</small><em>${u?.type==="page"?"PAGE":"COMPTE"}${u?.verified?" · VÉRIFIÉ":""}</em></span><b>›</b>
       </button>
     </div>
-    <div class="menu-grid-premium-v86">${items.map(([id,icon,label])=>{
-      if(id==="switchAccount") return "";
-      if(id==="logout") return `<button class="menu-card-v86 menu-danger" data-action="logout" type="button"><span class="menu-icon-v86">${icon}</span><span class="menu-copy-v86"><strong>${label}</strong></span><span class="menu-arrow-v86">›</span></button>`;
-      const actionAttr=id==="badge"?`data-action="openBadge"`:id==="admin"?`data-action="admin"`:``;
-      return `<button class="menu-card-v86" data-route="${id}" ${actionAttr} type="button"><span class="menu-icon-v86">${icon}</span><span class="menu-copy-v86"><strong>${label}</strong></span><span class="menu-arrow-v86">›</span></button>`;
-    }).join("")}</div>
+    ${sections.map(([title,ids])=>{
+      const cards=ids.map(id=>byId.get(id)).filter(Boolean).map(([id,icon,label])=>{
+        if(id==="logout") return `<button class="menu-card-v87 menu-danger" data-action="logout" type="button"><span class="menu-icon-v87">${icon}</span><span class="menu-copy-v87"><strong>${label}</strong><small>${desc[id]}</small></span><b>›</b></button>`;
+        const actionAttr=id==="badge"?`data-action="openBadge"`:id==="admin"?`data-action="admin"`:``;
+        return `<button class="menu-card-v87" data-route="${id}" ${actionAttr} type="button"><span class="menu-icon-v87">${icon}</span><span class="menu-copy-v87"><strong>${label}</strong><small>${desc[id]}</small></span><b>›</b></button>`;
+      }).join("");
+      return `<div class="menu-section-v87"><div class="menu-section-title-v87"><span>${esc(title)}</span><small>${cards?"Tafaß":""}</small></div><div class="menu-grid-v87">${cards}</div></div>`;
+    }).join("")}
   </section>`;
 }
+
 function premiumSettingsPage(title,subtitle,groups){
   return `${routeBackBar("Menu","menu")}<section class="settings-premium-v90">
     <div class="settings-hero-v90"><span class="settings-hero-icon">⚙</span><div><span class="eyebrow">TAFAß · RÉGLAGES</span><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div></div>
@@ -2614,6 +2624,7 @@ function bindPageEvents(){
 async function handleAction(e,el){
   const a=el.dataset.action,id=el.dataset.id||el.dataset.groupId;
   if(a==="admin"){ if(!isAdminAccount()) return toast("Accès administrateur refusé"); return routeTo("admin"); }
+  if(a==="openBadge") return routeTo("badge");
   if(a==="closeModal")return closeModal();
   if(a==="copyLink"){ closeModal(); return copyAppLink(id); }
   if(a==="nativeShareLink"){ const url=appLink(id); if(navigator.share){navigator.share({title:"Tafaß",url}).catch(()=>{});} else copyAppLink(id,"Lien copié"); return; }
@@ -2677,6 +2688,16 @@ async function handleAction(e,el){
   if(a==="messageUser"||a==="messagePage")return startConversation(id);
   if(a==="attachFile"){const form=el.closest("form");form?.querySelector("input[type=file]")?.click();return;}
   if(a==="downloadMessageFile"){const all=state.messages.flatMap(m=>m.files||[m.file]).filter(Boolean);const f=all.find(x=>String(x.id||'')===String(id));const src=messageFileUrl(f);if(src){const link=document.createElement("a");link.href=src;link.download=f?.name||"Tafaß-fichier";link.target="_blank";link.rel="noopener";document.body.appendChild(link);link.click();link.remove();}else toast("Fichier introuvable");return;}
+  if(a==="messageMore"){
+    const m=state.messages.find(x=>String(x.id)===String(id));
+    if(!m)return;
+    return modal("Options du message",`<div class="premium-options"><button class="menu-card-premium" data-action="deleteMessage" data-id="${esc(id)}"><span>⌫</span><strong>Supprimer ce message</strong></button><button class="menu-card-premium" data-action="closeModal"><span>×</span><strong>Annuler</strong></button></div>`);
+  }
+  if(a==="deleteMessage")return deleteMessage(id);
+  if(a==="conversationMore"){
+    return modal("Options de la conversation",`<div class="premium-options"><button class="menu-card-premium danger" data-action="deleteConversation" data-id="${esc(id)}"><span>⌫</span><strong>Supprimer toute la conversation</strong></button><button class="menu-card-premium" data-action="closeModal"><span>×</span><strong>Annuler</strong></button></div>`);
+  }
+  if(a==="deleteConversation")return deleteConversation(id);
   if(a==="viewProfile")return routeToProfile(id);
   if(a==="settingChoice"){
     const key=el.dataset.settingKey, label=el.dataset.settingLabel, opts=JSON.parse(el.dataset.settingOptions||"[]");
@@ -2738,7 +2759,7 @@ async function handleAction(e,el){
   if(a==="declineCall"){stopVoiceCall(true);return;}
   if(a==="createPage")return createPage();
   if(a==="viewPage"){editingPageId=id;return routeTo("pageView");}
-  if(a==="pageMore"){const p=findPage(id);if(!p)return;const own=p.ownerId===state.current;return modal("Options de la Page",`<div class="premium-options">${own?`<button class="menu-card-premium" data-action="editPage" data-id="${id}"><span>✎</span><strong>Modifier la Page</strong></button><button class="menu-card-premium" data-action="switchPage" data-id="${id}"><span>▤</span><strong>Passer en mode Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`:`<button class="menu-card-premium" data-action="followPage" data-id="${id}"><span>＋</span><strong>${state.follows.some(f=>f.from===state.current&&f.to===id)?"Ne plus suivre":"Suivre"}</strong></button><button class="menu-card-premium" data-action="messagePage" data-id="${id}"><span>◈</span><strong>Message</strong></button><button class="menu-card-premium" data-action="reportProfile" data-id="${id}"><span>⚑</span><strong>Signaler la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`}</div>`);}
+  if(a==="pageMore"){const p=findPage(id);if(!p)return;const own=p.ownerId===state.current;return modal("Options de la Page",`<div class="premium-options">${own?`<button class="menu-card-premium" data-action="editPage" data-id="${id}"><span>✎</span><strong>Modifier la Page</strong></button><button class="menu-card-premium" data-action="switchPage" data-id="${id}"><span>▤</span><strong>Passer en mode Page</strong></button><button class="menu-card-premium danger" data-action="deletePage" data-id="${id}"><span>⌫</span><strong>Supprimer définitivement la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`:`<button class="menu-card-premium" data-action="followPage" data-id="${id}"><span>＋</span><strong>${state.follows.some(f=>f.from===state.current&&f.to===id)?"Ne plus suivre":"Suivre"}</strong></button><button class="menu-card-premium" data-action="messagePage" data-id="${id}"><span>◈</span><strong>Message</strong></button><button class="menu-card-premium" data-action="reportProfile" data-id="${id}"><span>⚑</span><strong>Signaler la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`}</div>`);}
   if(a==="pageModeHome"){pageTab="posts";return render();}
   if(a==="pageModeMessages"){return routeTo("messages");}
   if(a==="pageModeVideos"){pageTab="reels";return render();}
@@ -2754,8 +2775,6 @@ async function handleAction(e,el){
     return;
   }
   if(a==="createGroup")return createGroup();
-  if(a==="refreshGroups"){ if(supabaseReady()) return loadSupabaseGroups().then(()=>render()).catch(e=>toast(e?.message||"Actualisation impossible")); return render(); }
-  if(a==="clearGroupSearch"){ window.groupSearch=""; return render(); }
   if(a==="joinGroup")return joinGroup(id);
   if(a==="leaveGroup")return leaveGroup(id);
   if(a==="viewGroup")return viewGroup(id);
@@ -2838,6 +2857,9 @@ async function handleAction(e,el){
   if(a==="profile"){profileViewingId=state.current;return routeTo("profile");}
   if(a==="profileStat"){const labels={friends:"amis",followers:"abonnés",following:"suivis"};toast(`${labels[el.dataset.stat]||"statistiques"} : affichage prêt`);return;}
   if(a==="profileMore"){const u=findUser(id);if(!u)return; if(id===state.current)return profileOwnMenu(); return profileOtherMenu(id);}
+  if(a==="deleteAccount")return confirmDeleteAccount();
+  if(a==="deleteAccountFinal")return deleteAccountFinal();
+  if(a==="deletePage")return deletePage(id);
   if(a==="profileOwnMenu")return profileOwnMenu();
   if(a==="profileOtherMenu")return profileOtherMenu(id);
   if(a==="viewAs")return toast("Aperçu public du profil");
@@ -2882,7 +2904,83 @@ async function handleAction(e,el){
   if(a==="forgotBtn")return forgot();
 }
 
-function profileOwnMenu(){modal("Mon profil",`<div class="premium-options"><button class="menu-card-premium" data-action="viewAs"><span>◉</span><strong>Voir en tant que</strong></button><button class="menu-card-premium" data-action="editProfile"><span>✎</span><strong>Modifier</strong></button><button class="menu-card-premium" data-action="profileStatus"><span>●</span><strong>Statut du profil</strong></button><button class="menu-card-premium" data-action="archive"><span>▣</span><strong>Archive</strong></button><button class="menu-card-premium" data-action="activityHistory"><span>◷</span><strong>Historique d'activité</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${state.current}"><span>🔗</span><strong>Copier le lien du profil</strong></button></div>`);}
+async function deletePage(id){
+  const page=findPage(id);
+  if(!page || String(page.ownerId)!==String(state.current)) return toast("Vous ne pouvez supprimer que votre propre Page.");
+  const ok=confirm(`Supprimer définitivement la Page « ${page.name||""} » ?\n\nCette action supprime la Page et ses contenus associés selon les règles Supabase.`);
+  if(!ok) return;
+  try{
+    if(supabaseReady()){
+      const {error}=await SB.from("pages").delete().eq("id",id).eq("owner_id",state.current);
+      if(error) throw error;
+    }
+    state.pages=(state.pages||[]).filter(p=>String(p.id)!==String(id));
+    if(state.pageMode===id) state.pageMode=null;
+    if(editingPageId===id) editingPageId=null;
+    save(); render(); toast("Page supprimée définitivement ✓");
+  }catch(err){ console.error("deletePage:",err); toast("Suppression de la Page impossible : "+(err?.message||"erreur Supabase")); }
+}
+
+function confirmDeleteAccount(){
+  modal("Supprimer définitivement le compte",`<div class="delete-account-panel-v87">
+    <div class="delete-account-warning-v87">⚠️</div>
+    <h3>Cette action est définitive</h3>
+    <p>Votre profil, vos Pages, vos Groupes, vos messages et les données liées à votre compte seront supprimés selon la politique de suppression Tafaß.</p>
+    <p class="delete-account-note-v87">Pour terminer la suppression complète, le projet Supabase doit avoir installé <b>ACCOUNT_DELETE_V1.sql</b> fourni avec cette version.</p>
+    <label class="delete-account-check-v87"><input id="deleteAccountConfirm" type="checkbox"> <span>Je comprends que cette action est irréversible.</span></label>
+    <button class="btn danger wide" data-action="deleteAccountFinal">Supprimer définitivement mon compte</button>
+  </div>`);
+}
+
+async function deleteAccountFinal(){
+  const check=$("deleteAccountConfirm");
+  if(!check?.checked) return toast("Confirmez d’abord la suppression définitive.");
+  if(!supabaseReady()) return toast("Supabase est nécessaire pour supprimer le compte.");
+  const btn=document.querySelector('[data-action="deleteAccountFinal"]');
+  if(btn){btn.disabled=true;btn.textContent="Suppression en cours…";}
+  try{
+    const {data,error}=await SB.rpc("tafa_delete_my_account");
+    if(error) throw error;
+    if(data===false) throw new Error("La suppression du compte n’a pas été confirmée par Supabase.");
+    state.current=null; state.users=[]; state.posts=[]; state.comments=[]; state.notifications=[]; state.messages=[]; state.conversations=[]; state.pages=[]; state.groups=[];
+    activeConversation=null; selectedGroupId=null; profileViewingId=null; state.pageMode=null;
+    save();
+    try{await SB.auth.signOut();}catch(_){}
+    closeModal();
+    render();
+    $("authScreen")?.classList.remove("hidden");
+    $("appScreen")?.classList.add("hidden");
+    toast("Compte supprimé définitivement ✓");
+  }catch(err){
+    console.error("deleteAccountFinal:",err);
+    if(btn){btn.disabled=false;btn.textContent="Supprimer définitivement mon compte";}
+    toast("Suppression impossible : "+(err?.message||"Vérifiez ACCOUNT_DELETE_V1.sql dans Supabase."));
+  }
+}
+
+async function deleteMessage(id){
+  const m=state.messages.find(x=>String(x.id)===String(id));
+  if(!m)return;
+  if(!confirm("Supprimer définitivement ce message ?"))return;
+  try{
+    if(supabaseReady()){const {error}=await SB.rpc("tafa_delete_message",{p_message_id:id});if(error)throw error;}
+    state.messages=state.messages.filter(x=>String(x.id)!==String(id));
+    save();closeModal();render();toast("Message supprimé ✓");
+  }catch(err){console.error("deleteMessage:",err);toast("Suppression du message impossible : "+(err?.message||"Vérifiez ACCOUNT_DELETE_V1.sql."));}
+}
+
+async function deleteConversation(id){
+  if(!confirm("Supprimer définitivement toute cette conversation et ses messages ?"))return;
+  try{
+    if(supabaseReady()){const {error}=await SB.rpc("tafa_delete_conversation",{p_conversation_id:id});if(error)throw error;}
+    state.messages=state.messages.filter(x=>String(x.conversationId)!==String(id));
+    state.conversations=state.conversations.filter(x=>String(x.id)!==String(id));
+    if(activeConversation===id)activeConversation=null;
+    save();closeModal();render();toast("Conversation supprimée ✓");
+  }catch(err){console.error("deleteConversation:",err);toast("Suppression de la conversation impossible : "+(err?.message||"Vérifiez ACCOUNT_DELETE_V1.sql."));}
+}
+
+function profileOwnMenu(){modal("Mon profil",`<div class="premium-options"><button class="menu-card-premium" data-action="viewAs"><span>◉</span><strong>Voir en tant que</strong></button><button class="menu-card-premium" data-action="editProfile"><span>✎</span><strong>Modifier</strong></button><button class="menu-card-premium" data-action="profileStatus"><span>●</span><strong>Statut du profil</strong></button><button class="menu-card-premium" data-action="archive"><span>▣</span><strong>Archive</strong></button><button class="menu-card-premium" data-action="activityHistory"><span>◷</span><strong>Historique d'activité</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${state.current}"><span>🔗</span><strong>Copier le lien du profil</strong></button><button class="menu-card-premium danger" data-action="deleteAccount"><span>⌫</span><strong>Supprimer définitivement mon compte</strong></button></div>`);}
 function profileOtherMenu(id){modal("Options du profil",`<div class="premium-options"><button class="menu-card-premium" data-action="reportProfile" data-id="${id}"><span>⚑</span><strong>Signaler le profil</strong></button><button class="menu-card-premium" data-action="blockProfile" data-id="${id}"><span>⊘</span><strong>Bloquer</strong></button>${isFriend(id)?`<button class="menu-card-premium" data-action="removeFriend" data-id="${id}"><span>−</span><strong>Retirer</strong></button>`:""}<button class="menu-card-premium" data-action="friendLinks" data-id="${id}"><span>♧</span><strong>Voir les liens d'amitié</strong></button><button class="menu-card-premium" data-action="followPrefs" data-id="${id}"><span>◉</span><strong>Suivre</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien du profil</strong></button></div>`);}
 async function toggleCommentLike(id){
   const c=state.comments.find(x=>x.id===id);
@@ -3575,46 +3673,16 @@ async function voteGroupPoll(pollId,optionId){
 }
 
 function renderGroups(){
-  const allGroups=(state.groups||[]);
-  const q=String(window.groupSearch||"").trim().toLowerCase();
-  const groups=q?allGroups.filter(g=>`${g.name||""} ${g.description||""} ${g.category||""}`.toLowerCase().includes(q)):allGroups;
-  const mine=allGroups.filter(g=>g.is_member===true||g.joined===true).length;
-  const publicCount=allGroups.filter(g=>String(g.visibility||g.privacy||"public").toLowerCase()!=="private"&&String(g.privacy||"").toLowerCase()!=="privé").length;
+  const groups=(state.groups||[]);
   return `${routeBackBar("Menu","menu")}<section class="groups-hub premium-page">
-    <div class="groups-hub-head">
-      <div class="groups-head-copy"><span class="eyebrow">TAFAß · COMMUNAUTÉS</span><h1>Groupes</h1><p>Découvrez, rejoignez et animez vos communautés Tafaß.</p></div>
-      <button type="button" class="btn primary groups-create-btn" data-action="createGroup"><span>＋</span> Créer un groupe</button>
-    </div>
-    <div class="groups-overview">
-      <div><span>Communautés</span><b>${allGroups.length}</b></div>
-      <div><span>Mes groupes</span><b>${mine}</b></div>
-      <div><span>Publics</span><b>${publicCount}</b></div>
-    </div>
-    <div class="groups-toolbar">
-      <label class="groups-search"><span>⌕</span><input id="groupSearchInput" value="${esc(window.groupSearch||"")}" placeholder="Rechercher un groupe..."></label>
-      <button type="button" class="group-toolbar-btn" data-action="refreshGroups">↻ Actualiser</button>
-    </div>
+    <div class="groups-hub-head"><div><span class="eyebrow">TAFAß · COMMUNAUTÉS</span><h1>Groupes</h1><p>Vos communautés synchronisées en temps réel.</p></div>
+      <button type="button" class="btn primary" data-action="createGroup">＋ Créer un groupe</button></div>
     <div class="groups-grid">
-      ${groups.map(g=>{
-        const count=Number(g.member_count||g.members?.length||0);
-        const privacy=String(g.visibility||g.privacy||"public").toLowerCase();
-        const cover=g.cover_url||g.coverUrl||"";
-        const initials=String(g.name||"G").trim().slice(0,1).toUpperCase();
-        return `<article class="group-list-card">
-          <button type="button" class="group-card-open" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}" aria-label="Voir ${esc(g.name||"le groupe")}">
-            <div class="group-list-cover" ${cover?`style="background-image:url('${esc(cover)}')"`:""}>
-              <div class="group-cover-placeholder"><span>${esc(initials)}</span></div>
-              <span class="group-privacy-badge">${privacy==="private"||privacy==="privé"?"🔒 Privé":"🌐 Public"}</span>
-            </div>
-          </button>
-          <div class="group-list-body">
-            <div class="group-card-title-row"><h3>${esc(g.name||"Groupe")}</h3><span>${esc(g.category||"Général")}</span></div>
-            <p>${esc(g.description||"Communauté Tafaß")}</p>
-            <div class="group-card-meta"><span>👥 ${count} membre${count>1?"s":""}</span><span>•</span><span>${privacy==="private"||privacy==="privé"?"Privé":"Public"}</span></div>
-            <button type="button" class="btn primary wide" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}">Voir le groupe <span>›</span></button>
-          </div>
-        </article>`;
-      }).join("") || `<div class="groups-empty card"><div class="groups-empty-icon">◆</div><b>${q?"Aucun groupe trouvé":"Aucun groupe"}</b><p>${q?"Essayez un autre nom ou mot-clé.":"Créez votre première communauté Tafaß."}</p>${q?`<button class="btn secondary" data-action="clearGroupSearch">Effacer la recherche</button>`:`<button class="btn primary" data-action="createGroup">＋ Créer un groupe</button>`}</div>`}
+      ${groups.map(g=>`<article class="group-list-card">
+        <div class="group-list-cover" ${g.cover_url?`style="background-image:url('${esc(g.cover_url)}')"`:""}><span>${g.privacy==="Privé"?"🔒":"🌐"}</span></div>
+        <div class="group-list-body"><h3>${esc(g.name)}</h3><p>${esc(g.description||"Communauté Tafaß")}</p><small>👥 ${Number(g.member_count||g.members?.length||0)} membres · ${esc(g.category||"Général")}</small>
+        <button type="button" class="btn primary wide" data-action="viewGroup" data-group-open="1" data-group-id="${esc(g.id)}" data-id="${esc(g.id)}">Voir le groupe</button></div>
+      </article>`).join("") || `<div class="card empty"><b>Aucun groupe</b><p>Créez votre première communauté.</p></div>`}
     </div>
   </section>`;
 }
