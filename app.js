@@ -1657,8 +1657,44 @@ function renderGroups(){
   return `<section class="page-head"><div><span class="eyebrow">COMMUNAUTÉS</span><h1>Groupes</h1><p>Rejoignez des communautés et partagez avec leurs membres.</p></div><button class="btn primary" data-action="createGroup">＋ Créer un Groupe</button></section><div class="card list-panel">${groups.length?groups.map(g=>`<div class="list-item"><div class="avatar md">👥</div><div class="list-main"><b>${esc(g.name||"Groupe")}</b><small>${esc(g.privacy||"Public")} · ${Number(g.member_count||g.members?.length||0)} membres</small></div><button class="btn ghost" data-action="viewGroup" data-id="${esc(g.id)}">Voir</button></div>`).join(""):`<div class="empty-state"><h3>Aucun Groupe</h3><p>Créez ou rejoignez votre première communauté.</p></div>`}</div>`;
 }
 function renderMenu(){
-  const items=MENU_ITEMS.filter(x=>x[0]!=="profile");
-  return `<section class="page-head"><div><span class="eyebrow">TAFAß</span><h1>Menu</h1><p>Tous les espaces et paramètres de votre compte.</p></div></section><div class="menu-grid">${items.map(([id,icon,label])=>`<button class="menu-card-premium" data-route="${esc(id)}"><span>${icon}</span><strong>${esc(label)}</strong><small>Ouvrir ${esc(label.toLowerCase())}</small><i>›</i></button>`).join("")}</div><div class="card menu-account">${avatar(me(),"avatar lg")}<div><b>${esc(displayName(me()))}</b><small>@${esc(me()?.username||"")}</small></div><button class="btn ghost danger" data-action="logout">Déconnexion</button></div>`;
+  const groups=[
+    {title:"Mon espace",sub:"Votre profil et vos échanges",items:[
+      ["profile","◯","Profil","Accéder à votre profil et le modifier"],
+      ["friends","♧","Amis","Gérer vos amis et demandes"],
+      ["messages","✉","Messages","Conversations et messages privés"],
+      ["notifications","♢","Notifications","Vos alertes et activités récentes"]
+    ]},
+    {title:"Contenu & communautés",sub:"Découvrez et gérez votre contenu",items:[
+      ["videos","▶","Vidéos","Regarder et publier des vidéos"],
+      ["reels","◆","Réels","Découvrir les vidéos courtes"],
+      ["pages","▤","Pages","Gérer et découvrir les Pages"],
+      ["groups","◉","Groupes","Communautés et groupes"],
+      ["saved","🔖","Enregistré","Retrouver vos contenus enregistrés"],
+      ["events","◫","Événements","Vos événements et activités"]
+    ]},
+    {title:"Paramètres & confidentialité",sub:"Contrôlez votre compte et votre vie privée",items:[
+      ["settings","⚙","Paramètres","Préférences générales de Tafaß"],
+      ["privacy","◌","Confidentialité","Qui peut voir vos informations"],
+      ["security","🔒","Sécurité","Protection et sécurité du compte"],
+      ["accounts","◎","Comptes","Comptes enregistrés sur cet appareil"],
+      ["language","文","Langue","Langue de l’interface"],
+      ["accessibility","♿","Accessibilité","Adapter Tafaß à vos besoins"],
+      ["devices","▣","Appareils","Vos sessions et appareils"],
+      ["payments","◇","Paiements","Paiements et services"],
+      ["ads","▥","Publicités","Préférences publicitaires"],
+      ["activity","◷","Activité","Votre historique d’activité"]
+    ]},
+    {title:"Aide & informations",sub:"Assistance et informations sur Tafaß",items:[
+      ["help","?","Aide","Trouver une réponse à vos questions"],
+      ["badge","✓","Badge Bleu","Demande de vérification"],
+      ["terms","§","Conditions","Conditions d’utilisation"],
+      ["about","ⓘ","À propos de Tafaß","Informations sur l’application"]
+    ]}
+  ];
+  return `<section class="page-head"><div><span class="eyebrow">TAFAß</span><h1>Menu</h1><p>Accédez rapidement à votre profil, vos contenus, vos paramètres et votre confidentialité.</p></div></section>
+  <section class="menu-profile-card card" data-route="profile">${avatar(me(),"avatar lg")}<div><span>MON PROFIL</span><h2>${esc(displayName(me()))}</h2><p>@${esc(me()?.username||"")} · Voir et modifier votre profil</p></div><i>›</i></section>
+  <div class="menu-sections">${groups.map(g=>`<section class="menu-section"><header><h2>${esc(g.title)}</h2><p>${esc(g.sub)}</p></header><div class="menu-grid">${g.items.map(([id,icon,label,desc])=>`<button class="menu-card-premium" data-route="${esc(id)}"><span>${icon}</span><div class="menu-card-copy"><strong>${esc(label)}</strong><small>${esc(desc)}</small></div><i>›</i></button>`).join("")}</div></section>`).join("")}</div>
+  <div class="card menu-account">${avatar(me(),"avatar lg")}<div><b>${esc(displayName(me()))}</b><small>@${esc(me()?.username||"")}</small></div><button class="btn ghost danger" data-action="logout">Déconnexion</button></div>`;
 }
 function renderSettingsRoute(){
   const titles={settings:["Paramètres","Gérez les préférences de Tafaß."],privacy:["Confidentialité","Contrôlez qui peut voir vos informations."],security:["Sécurité","Protégez votre compte."],accounts:["Comptes","Gérez les comptes enregistrés sur cet appareil."],language:["Langue","Choisissez la langue de l’interface."],accessibility:["Accessibilité","Adaptez l’expérience à vos besoins."],devices:["Appareils","Consultez vos sessions."],payments:["Paiements","Historique des paiements et services."],badge:["Badge bleu","Demande de vérification."],ads:["Publicités","Préférences publicitaires."],activity:["Activité","Votre historique Tafaß."],help:["Aide","Trouvez les réponses aux questions fréquentes."],terms:["Conditions","Conditions d’utilisation de Tafaß."],about:["À propos de Tafaß","Réseau social moderne pour partager, communiquer et découvrir."]};
