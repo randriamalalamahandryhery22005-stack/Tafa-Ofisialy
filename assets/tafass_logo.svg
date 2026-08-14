@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="tafablue" x1="180" y1="80" x2="340" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1877F2"/>
+      <stop offset="1" stop-color="#0866FF"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="256" cy="256" r="232" fill="#FFFFFF"/>
+
+  <!-- Slim lowercase t -->
+  <path
+    fill="url(#tafablue)"
+    d="M282 104
+       H327
+       V160
+       H282
+       V296
+       C282 322 294 333 316 333
+       C325 333 334 331 342 328
+       V380
+       C330 385 315 388 300 388
+       C250 388 218 358 218 307
+       V160
+       H185
+       V104
+       H218
+       C220 73 245 58 282 58
+       Z"/>
+</svg>
