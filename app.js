@@ -2277,7 +2277,8 @@ function premiumSettingsPage(title,subtitle,groups){
       <div class="settings-cards-v90">${g.items.map((x,i)=>{
         const action=x.action||"settingChoice";
         let current=state.settings?.[`${g.key||title}-${i}`] || (x.options?.[0]||""); if((g.key||title)==="preferences"&&i===0) current=state.settings?.dark?"Sombre":"Clair"; if(((g.key||title)==="preferences"&&i===1)||((g.key||title)==="langue"&&i===0)) current=state.settings?.language||"Français";
-        return `<button type="button" class="setting-row-v91" data-action="${action}" data-setting-key="${esc(g.key||title)}-${i}" data-setting-options='${esc(JSON.stringify(x.options||[]))}' data-setting-label="${esc(x.label)}"><span class="setting-row-icon">${x.icon||["◉","✓","⌁","▣","◇"][i%5]}</span><span class="setting-row-copy"><b>${esc(x.label)}</b><small>${esc(x.desc||"")}</small></span><span class="setting-current-v91">${esc(current)}</span><strong class="setting-arrow-v91">›</strong></button>`;
+        if(x.privacyKey){ current=state.users?.find(u=>u.id===state.current)?.privacy?.[x.privacyKey] || "Public"; }
+        return `<button type="button" class="setting-row-v91 ${x.danger?"setting-row-danger-v91":""}" data-action="${action}" data-setting-key="${esc(g.key||title)}-${i}" data-setting-options='${esc(JSON.stringify(x.options||[]))}' data-setting-label="${esc(x.label)}" ${x.privacyKey?`data-privacy-key="${esc(x.privacyKey)}"`:""}><span class="setting-row-icon">${x.icon||["◉","✓","⌁","▣","◇"][i%5]}</span><span class="setting-row-copy"><b>${esc(x.label)}</b><small>${esc(x.desc||"")}</small></span><span class="setting-current-v91">${esc(current)}</span><strong class="setting-arrow-v91">›</strong></button>`;
       }).join("")}</div>
     </div>`).join("")}
   </section>`;
@@ -2287,7 +2288,8 @@ function renderSettings(){
     {icon:"◎",title:"Compte",key:"compte",help:"Informations et gestion du compte",items:[
       {label:"Informations personnelles",desc:"Nom, date de naissance, e-mail et téléphone",options:["Modifier"],action:"editPersonalInfo"},
       {label:"Mot de passe",desc:"Modifier votre mot de passe",options:["Modifier"],action:"changePassword"},
-      {label:"Notifications",desc:"Préférences des alertes",options:["Ouvrir"],action:"openNotificationSettings"}
+      {label:"Notifications",desc:"Préférences des alertes",options:["Ouvrir"],action:"openNotificationSettings"},
+      {label:"Supprimer définitivement mon compte",desc:"Supprimez votre profil, vos Pages, vos Groupes, vos messages et les données liées au compte.",options:["Supprimer"],action:"deleteAccount",danger:true}
     ]},
     {icon:"◌",title:"Préférences",key:"preferences",items:[
       {label:"Thème",desc:"Choisir l'apparence de Tafaß",options:["Clair","Sombre","Système"]},
@@ -2303,14 +2305,20 @@ function renderSettings(){
 }
 function renderPrivacy(){
   return premiumSettingsPage("Confidentialité","Choisissez précisément qui peut voir vos informations et interagir avec vous.",[
+    {icon:"◌",title:"Informations personnelles",key:"infos_privees",help:"Contrôlez séparément la visibilité de vos informations personnelles",items:[
+      {label:"Numéro de téléphone",desc:"Qui peut voir votre numéro de téléphone",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"phone"},
+      {label:"E-mail",desc:"Qui peut voir votre adresse e-mail",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"email"},
+      {label:"Date de naissance",desc:"Qui peut voir votre date de naissance",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"birth"},
+      {label:"Genre",desc:"Qui peut voir votre genre",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"gender"}
+    ]},
     {icon:"◌",title:"Visibilité du profil",key:"profil",help:"Chaque réglage peut être modifié indépendamment",items:[
-      {label:"Profil",desc:"Qui peut voir votre profil",options:["Public","Amis","Moi uniquement"]},
-      {label:"Photo de profil",desc:"Visibilité de votre photo",options:["Public","Amis","Moi uniquement"]},
-      {label:"Photo de couverture",desc:"Visibilité de votre couverture",options:["Public","Amis","Moi uniquement"]},
-      {label:"Bio",desc:"Qui peut voir votre bio",options:["Public","Amis","Moi uniquement"]},
-      {label:"Localisation",desc:"Ville et localisation",options:["Public","Amis","Moi uniquement"]},
-      {label:"Situation amoureuse",desc:"Informations personnelles",options:["Public","Amis","Moi uniquement"]},
-      {label:"Pseudo",desc:"Afficher le pseudo entre parenthèses",options:["Public","Amis","Moi uniquement"]}
+      {label:"Profil",desc:"Qui peut voir votre profil",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"profile"},
+      {label:"Photo de profil",desc:"Visibilité de votre photo",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"avatar"},
+      {label:"Photo de couverture",desc:"Visibilité de votre couverture",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"cover"},
+      {label:"Bio",desc:"Qui peut voir votre bio",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"bio"},
+      {label:"Localisation",desc:"Ville et localisation",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"location"},
+      {label:"Situation amoureuse",desc:"Informations personnelles",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"relationshipStatus"},
+      {label:"Pseudo",desc:"Afficher le pseudo entre parenthèses",options:["Public","Amis","Moi uniquement"],action:"setProfilePrivacy",privacyKey:"username"}
     ]},
     {icon:"♧",title:"Interactions",key:"interactions",help:"Contrôlez les invitations et abonnements",items:[
       {label:"Invitations d'amis",desc:"Qui peut vous envoyer une invitation",options:["Tout le monde","Amis d'amis","Personne"]},
@@ -2759,7 +2767,11 @@ async function handleAction(e,el){
   if(a==="declineCall"){stopVoiceCall(true);return;}
   if(a==="createPage")return createPage();
   if(a==="viewPage"){editingPageId=id;return routeTo("pageView");}
-  if(a==="pageMore"){const p=findPage(id);if(!p)return;const own=p.ownerId===state.current;return modal("Options de la Page",`<div class="premium-options">${own?`<button class="menu-card-premium" data-action="editPage" data-id="${id}"><span>✎</span><strong>Modifier la Page</strong></button><button class="menu-card-premium" data-action="switchPage" data-id="${id}"><span>▤</span><strong>Passer en mode Page</strong></button><button class="menu-card-premium danger" data-action="deletePage" data-id="${id}"><span>⌫</span><strong>Supprimer définitivement la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`:`<button class="menu-card-premium" data-action="followPage" data-id="${id}"><span>＋</span><strong>${state.follows.some(f=>f.from===state.current&&f.to===id)?"Ne plus suivre":"Suivre"}</strong></button><button class="menu-card-premium" data-action="messagePage" data-id="${id}"><span>◈</span><strong>Message</strong></button><button class="menu-card-premium" data-action="reportProfile" data-id="${id}"><span>⚑</span><strong>Signaler la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`}</div>`);}
+  if(a==="pageSettings"){
+    const p=findPage(id); if(!p||p.ownerId!==state.current) return toast("Accès réservé au propriétaire de la Page.");
+    return modal("Paramètres de la Page",`<div class="premium-options"><button class="menu-card-premium" data-action="editPage" data-id="${esc(id)}"><span>✎</span><strong>Modifier les informations</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${esc(id)}"><span>🔗</span><strong>Copier le lien de la Page</strong></button><button class="menu-card-premium danger" data-action="deletePage" data-id="${esc(id)}"><span>⌫</span><strong>Supprimer définitivement la Page</strong><small>Cette action est irréversible.</small></button></div>`);
+  }
+  if(a==="pageMore"){const p=findPage(id);if(!p)return;const own=p.ownerId===state.current;return modal("Options de la Page",`<div class="premium-options">${own?`<button class="menu-card-premium" data-action="editPage" data-id="${id}"><span>✎</span><strong>Modifier la Page</strong></button><button class="menu-card-premium" data-action="pageSettings" data-id="${id}"><span>⚙</span><strong>Paramètres de la Page</strong></button><button class="menu-card-premium" data-action="switchPage" data-id="${id}"><span>▤</span><strong>Passer en mode Page</strong></button><button class="menu-card-premium danger" data-action="deletePage" data-id="${id}"><span>⌫</span><strong>Supprimer définitivement la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`:`<button class="menu-card-premium" data-action="followPage" data-id="${id}"><span>＋</span><strong>${state.follows.some(f=>f.from===state.current&&f.to===id)?"Ne plus suivre":"Suivre"}</strong></button><button class="menu-card-premium" data-action="messagePage" data-id="${id}"><span>◈</span><strong>Message</strong></button><button class="menu-card-premium" data-action="reportProfile" data-id="${id}"><span>⚑</span><strong>Signaler la Page</strong></button><button class="menu-card-premium" data-action="shareLink" data-id="${id}"><span>🔗</span><strong>Copier le lien de la Page</strong></button>`}</div>`);}
   if(a==="pageModeHome"){pageTab="posts";return render();}
   if(a==="pageModeMessages"){return routeTo("messages");}
   if(a==="pageModeVideos"){pageTab="reels";return render();}
@@ -2820,6 +2832,20 @@ async function handleAction(e,el){
   if(a==="adminApproveBadge")return badgeDecision(id,true);
   if(a==="adminRejectBadge")return badgeDecision(id,false);
   if(a==="helpTopic"){ const t=el.dataset.topic; const help={"Compte et connexion":"Gérez la connexion, l'inscription, le changement de mot de passe et la déconnexion.","Publications et Stories":"Créez, modifiez, supprimez, enregistrez et partagez vos contenus. La visibilité peut être Public, Amis ou Moi uniquement.","Amis et abonnés":"Envoyez des invitations, acceptez ou refusez des demandes et gérez vos abonnements.","Messages et appels":"Recherchez une personne, ouvrez sa conversation, envoyez du texte, des photos, vidéos, audio et fichiers, utilisez les messages vocaux et passez des appels audio/vidéo en temps réel.","Pages et groupes":"Créez une Page ou un groupe, publiez au nom de votre Page et gérez les membres.","Badge bleu":"Demandez le badge bleu en 5 étapes pour 25 000 Ar/mois. Le paiement reste simulé localement.","Confidentialité":"Réglez la visibilité de votre profil, bio, photos, situation amoureuse, pseudo, publications et Stories.","Sécurité":"Modifiez votre mot de passe, surveillez les sessions et activez la vérification en deux étapes dans le prototype.","Marketplace":"Publiez des annonces, recherchez des produits et contactez un vendeur.","Recherche":"Recherchez des personnes, comptes, Pages, groupes, publications, photos, vidéos et Reels."}; return modal(t,`<div class="help-topic-card-v91"><div class="help-topic-icon-v91">?</div><p>${esc(help[t]||"Cette rubrique contient les informations d'utilisation de Tafaß.")}</p><button class="btn primary wide" data-action="closeModal">Compris</button></div>`); }
+  if(a==="setProfilePrivacy"){
+    const u=me(); if(!u) return toast("Profil introuvable.");
+    const key=el.dataset.privacyKey; const options=JSON.parse(el.dataset.settingOptions||"[]");
+    const current=u.privacy?.[key]||"Public";
+    return modal("Confidentialité · "+(el.dataset.settingLabel||"Information"),`<div class="privacy-choice-panel-v91"><p>Choisissez qui peut voir cette information sur votre profil.</p><div class="privacy-choice-list-v91">${options.map(v=>`<button type="button" class="menu-card-premium ${v===current?"active":""}" data-action="saveProfilePrivacy" data-privacy-key="${esc(key)}" data-privacy-value="${esc(v)}"><span>${v==="Public"?"🌐":v==="Amis"?"♧":"🔒"}</span><strong>${esc(v)}</strong><small>${v==="Public"?"Tout le monde":v==="Amis"?"Vos amis uniquement":"Vous uniquement"}</small>${v===current?"<b>✓</b>":""}</button>`).join("")}</div></div>`);
+  }
+  if(a==="saveProfilePrivacy"){
+    const u=me(); if(!u) return;
+    const key=el.dataset.privacyKey, value=el.dataset.privacyValue;
+    u.privacy={...(u.privacy||{}),[key]:value};
+    try{ await saveCurrentProfileToSupabase(u); closeModal(); render(); toast("Confidentialité enregistrée ✓"); }
+    catch(err){ console.error("saveProfilePrivacy:",err); toast("Impossible d'enregistrer la confidentialité : "+(err?.message||"erreur Supabase")); }
+    return;
+  }
   if(a==="applySettings"){state.settings=state.settings||{};document.querySelectorAll("[data-setting-key]").forEach(x=>{state.settings[x.dataset.settingKey]=x.value});save();toast("Paramètres appliqués");return;}
   if(a==="switchAccount")return openAccountSwitcher();
   if(a==="addAccount"){
