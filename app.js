@@ -1610,7 +1610,7 @@ function renderVideos(){
 function renderReels(){
   const reels=(state.posts||[]).filter(p=>canSeePost(p)&&p.media&&(p.mediaType==="reel"||String(p.mediaType||"").toLowerCase().includes("reel")));
   return `<section class="page-head"><div><span class="eyebrow">TAFAß REELS</span><h1>Réels</h1><p>Des vidéos courtes à découvrir.</p></div><button class="btn primary" data-action="openComposer" data-kind="reel">＋ Créer un Reel</button></section>
-  <div class="reels-grid">${reels.length?reels.map(p=>`<button class="reel-tile" data-action="viewMedia" data-id="${esc(p.id)}"><video src="${esc(p.media)}" muted playsinline preload="metadata"></video><span>${esc((p.text||"").slice(0,60))}</span></button>`).join(""):`<div class="card empty-state"><h3>Aucun Reel</h3><p>Publiez votre premier Reel.</p></div>`}</div>`;
+  <div class="reels-grid">${reels.length?reels.map(p=>`<article class="reel-tile" data-action="viewMedia" data-id="${esc(p.id)}"><video src="${esc(p.media)}" muted playsinline preload="metadata"></video><span>${esc(p.text||"")}</span></article>`).join(""):`<div class="card empty-state"><h3>Aucun Reel</h3><p>Publiez votre premier Reel.</p></div>`}</div>`;
 }
 function renderMarketplace(){
   const q=(window.marketSearch||"").toLowerCase();
