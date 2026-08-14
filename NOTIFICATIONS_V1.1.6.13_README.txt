@@ -1,0 +1,13 @@
+TAFAß V1.1.6.13 — NOTIFICATIONS
+
+- Notifications Supabase conservées comme source de vérité.
+- Filtrage par auth user_id.
+- Realtime notifications conservé.
+- Types pris en charge: invitations, acceptation, messages, réactions, commentaires, Stories, Marketplace, suivi, badge, etc.
+- Clic message -> Messages.
+- Clic Marketplace -> Marketplace.
+- Clic interaction sociale -> profil/contenu approprié.
+- Marquer comme lu / Tout marquer comme lu / Effacer.
+- Changement de compte: notifications rechargées pour le compte Supabase actif.
+
+SQL nouveau non requis si le système notifications existant est déjà installé.

@@ -1,0 +1,47 @@
+TAFAß V1.1.6.22 — PAGES & GROUPES REAL-TIME / REAL DATA
+
+OBJECTIF
+- Remplacer le stockage local/démonstration des Pages et Groupes par Supabase.
+- Synchronisation Realtime des pages, abonnements, groupes, membres et demandes.
+- Publications au nom d'une Page via posts.publisher_page_id.
+- Publications dans un Groupe via posts.group_id.
+- RLS pour protéger propriétaire, abonnements, membres, demandes et publications de groupes privés.
+
+INSTALLATION
+1. Ouvrir Supabase Dashboard > SQL Editor.
+2. Exécuter UNE FOIS : PAGES_GROUPES_REALTIME_V1.1.6.22.sql
+3. Attendre "Success".
+4. Remplacer les fichiers du projet par ce ZIP.
+5. Se déconnecter/reconnecter dans Tafaß.
+
+TESTS
+PAGES
+- Compte A crée une Page.
+- Compte B voit la Page.
+- B suit la Page.
+- A voit le follower apparaître sans recharger la page.
+- A passe en Mode Page et publie.
+- B voit la publication de la Page.
+
+GROUPES PUBLICS
+- A crée un groupe Public.
+- B rejoint.
+- B publie dans le groupe.
+- A voit la publication en temps réel.
+- B quitte; le compteur se met à jour.
+
+GROUPES PRIVÉS
+- A crée un groupe Privé.
+- B demande à rejoindre.
+- A voit la demande en temps réel.
+- A accepte.
+- B devient membre.
+- B publie; la publication n'est visible qu'aux membres.
+
+SECURITE
+- Aucun mot de passe n'est stocké.
+- Les opérations utilisent la session Supabase.
+- Les Pages appartiennent à owner_id.
+- Un utilisateur ne peut suivre qu'en son propre nom.
+- Un utilisateur ne peut publier au nom d'une Page que s'il en est propriétaire.
+- Un utilisateur ne peut publier dans un Groupe que s'il est membre actif.

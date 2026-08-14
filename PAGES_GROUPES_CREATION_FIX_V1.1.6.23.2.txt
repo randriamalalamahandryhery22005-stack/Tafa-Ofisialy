@@ -1,0 +1,7 @@
+V1.1.6.23.2 - Pages & Groupes creation final fix
+
+Correction:
+- Page creation submit button now explicitly uses type="submit".
+- Page creation handler safely checks the submit button before setting disabled.
+- Group creation handler keeps the same safe button handling.
+- No database schema change.

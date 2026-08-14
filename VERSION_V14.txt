@@ -1,0 +1,21 @@
+TAFA OFISIALY V14
+
+Interaction display fix.
+
+Backend expected:
+- public.post_reactions.reaction_type
+- public.comments.content
+- public.posts.shares
+- tafa_set_post_reaction(uuid,text)
+- tafa_add_comment(uuid,text)
+- tafa_increment_post_share(uuid)
+
+The V14 frontend now:
+- updates reaction counters immediately after successful RPC;
+- keeps the selected reaction visible immediately;
+- updates comment list/count immediately after successful comment RPC;
+- updates share count from the RPC return value immediately;
+- reconciles with Supabase after rendering without wiping successful local state on read errors;
+- reads reaction_type and comments.content from the live schema.
+
+No new SQL is required if the V13 SQL was already executed successfully.

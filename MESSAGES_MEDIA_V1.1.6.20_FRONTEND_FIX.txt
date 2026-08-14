@@ -1,0 +1,13 @@
+TAFAß V1.1.6.20 — Messages attachments renderer FIX
+
+Fixed in frontend app.js:
+- Images use MIME + extension fallback.
+- Videos render with <video controls>.
+- Audio/voice messages render with <audio controls>.
+- PDF files get an inline preview plus Ouvrir and Enregistrer actions.
+- DOC/DOCX/XLS/XLSX/PPT/PPTX/TXT/CSV/JSON/HTML/CSS/JS/ZIP/RAR/7Z/APK are rendered as file cards with download.
+- Attachment URL falls back to Storage public URL when only storage_path is returned.
+- message_attachments are still loaded through tafa_get_message_attachments.
+- Realtime message_attachments events continue to refresh messages.
+- Reloading the conversation reconstructs attachments from the database.
+- No Supabase SQL/schema changes were made.

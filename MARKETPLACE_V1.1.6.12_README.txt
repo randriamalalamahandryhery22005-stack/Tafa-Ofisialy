@@ -1,0 +1,9 @@
+Tafaß V1.1.6.12 — Marketplace Supabase
+
+1. Execute MARKETPLACE_V1.1.6.12_SUPABASE.sql in Supabase SQL Editor.
+2. Confirm Success.
+3. Replace the app with this ZIP.
+4. Test Marketplace: create listing, refresh, open listing, contact seller.
+
+Marketplace is now backed by public.marketplace_listings and the marketplace Storage bucket.
+Existing Messages are reused to contact sellers.

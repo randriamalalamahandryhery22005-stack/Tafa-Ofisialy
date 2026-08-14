@@ -1,0 +1,18 @@
+{
+  "phase": "Publications",
+  "version": "v1",
+  "preserved": [
+    "authentication",
+    "existing_supabase_architecture"
+  ],
+  "key_files": [
+    "app.js",
+    "supabase.sql",
+    "INTERACTIONS_V15_REACTION_FIX.sql",
+    "REALTIME_V18.3_SCHEMA-COMPAT.sql",
+    "V18.5_FINAL_RLS_REALTIME_FIX.sql",
+    "POSTS_DB_DIAGNOSTIC.sql",
+    "NOTIFICATIONS_V15.sql"
+  ],
+  "note": "Historical SQL migrations are intentionally not merged into one guessed migration."
+}

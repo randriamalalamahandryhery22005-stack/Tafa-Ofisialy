@@ -1,0 +1,13 @@
+TAFAß V1.1.6.11.2 — Messages conversation visibility fix
+
+IMPORTANT: run MESSAGES_V1.1.6.11.2_SQL.sql in Supabase before using this build.
+
+The previous build could successfully insert messages through SECURITY DEFINER RPCs,
+but the frontend then read conversations/messages directly through tables. If RLS hid
+those rows, loadSupabaseMessages() replaced the local state with an empty list.
+
+This build reads both conversations and messages through SECURITY DEFINER RPCs:
+- tafa_get_user_conversations()
+- tafa_get_conversation_messages(uuid[])
+
+Sender and recipient therefore read the same persisted conversation/message data.
