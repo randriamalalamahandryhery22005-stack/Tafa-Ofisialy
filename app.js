@@ -4,19 +4,9 @@
 document.addEventListener("input",function(e){if(e.target?.id==="groupSearchInput"){window.groupSearch=e.target.value||"";render();}});
 
 /* TAFA_ADMIN_CLICK_FIX
-   The admin menu must remain clickable even when a parent menu handler
-   consumes the click. */
-document.addEventListener("click",function(e){
-  const el=e.target.closest?.('[data-action="admin"], [data-route="admin"], [data-page="admin"]');
-  if(!el || !isAdminAccount()) return;
-  e.preventDefault();
-  e.stopPropagation();
-  try{
-    route="admin";
-    if(typeof render==="function") render();
-    else if(typeof renderApp==="function") renderApp();
-  }catch(err){ console.error("Admin navigation error",err); }
-},true);
+   Admin navigation is handled by the main delegated action system below.
+   No capture-phase handler is used here, so data-action="admin" reaches
+   handleAction() and routeTo("admin") inside the application scope. */
 
 (() => {
 "use strict";
